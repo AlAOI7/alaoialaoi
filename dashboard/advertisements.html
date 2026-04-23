@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الإعلانات - لوحة تحكم المتجر الإلكتروني</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8A84FF;
+            --primary-dark: #524BC2;
+            --secondary: #FF6584;
+            --accent: #36D1DC;
+            --success: #4ECDC4;
+            --warning: #FF9A76;
+            --info: #6A89CC;
+            --light: #F8F9FD;
+            --dark: #2D3748;
+            --gray: #718096;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2f8 100%);
+            color: var(--dark);
+            direction: rtl;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* التصميم الرئيسي */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* الشريط الجانبي */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            transition: var(--transition);
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .logo p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-right: 4px solid transparent;
+            position: relative;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-right-color: var(--accent);
+        }
+
+        .menu-item i {
+            margin-left: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .submenu {
+            background-color: rgba(0, 0, 0, 0.15);
+            display: none;
+        }
+
+        .submenu-item {
+            padding: 10px 20px 10px 45px;
+            font-size: 13px;
+            transition: var(--transition);
+        }
+
+        .submenu-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-item.active .submenu {
+            display: block;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-right: var(--sidebar-width);
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        /* الهيدر */
+        .header {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 0 20px;
+            height: var(--header-height);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--gray);
+            margin-left: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .toggle-sidebar:hover {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-icon {
+            position: relative;
+            margin-left: 15px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .header-icon:hover {
+            background-color: var(--light);
+        }
+
+        .header-icon i {
+            font-size: 18px;
+            color: var(--gray);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: linear-gradient(135deg, var(--secondary), var(--warning));
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 30px;
+            transition: var(--transition);
+        }
+
+        .user-profile:hover {
+            background-color: var(--light);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--gray);
+        }
+
+        /* محتوى الصفحة */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .page-title {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title h2 {
+            font-size: 24px;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .page-title .date {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .page-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius);
+            background-color: white;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--dark);
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--light);
+            border-color: var(--primary);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 15px;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-info h3 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .stat-info p {
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .stat-trend {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        .trend-down {
+            color: var(--secondary);
+        }
+
+        .card-1 .stat-icon {
+            background: linear-gradient(135deg, #6C63FF, #8A84FF);
+            color: white;
+        }
+
+        .card-2 .stat-icon {
+            background: linear-gradient(135deg, #FF6584, #FF9A76);
+            color: white;
+        }
+
+        .card-3 .stat-icon {
+            background: linear-gradient(135deg, #36D1DC, #4ECDC4);
+            color: white;
+        }
+
+        .card-4 .stat-icon {
+            background: linear-gradient(135deg, #6A89CC, #82CCDD);
+            color: white;
+        }
+
+        /* جدول الإعلانات */
+        .ads-container {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .ads-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .ads-header h3 {
+            font-size: 18px;
+            color: var(--dark);
+        }
+
+        .ads-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ads-table th, .ads-table td {
+            padding: 12px 10px;
+            text-align: right;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .ads-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .ads-table td {
+            font-size: 13px;
+        }
+
+        .ad-image {
+            width: 60px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+        }
+
+        .ad-title {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .ad-type {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .ad-type.product {
+            background-color: rgba(78, 205, 196, 0.15);
+            color: var(--success);
+        }
+
+        .ad-type.promotional {
+            background-color: rgba(108, 99, 255, 0.15);
+            color: var(--primary);
+        }
+
+        .ad-position {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .ad-position.top {
+            background-color: rgba(54, 209, 220, 0.15);
+            color: var(--accent);
+        }
+
+        .ad-position.middle {
+            background-color: rgba(255, 154, 118, 0.15);
+            color: var(--warning);
+        }
+
+        .ad-position.bottom {
+            background-color: rgba(106, 137, 204, 0.15);
+            color: var(--info);
+        }
+
+        .ad-position.popup {
+            background-color: rgba(255, 101, 132, 0.15);
+            color: var(--secondary);
+        }
+
+        .ad-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .ad-status.active {
+            background-color: rgba(78, 205, 196, 0.15);
+            color: var(--success);
+        }
+
+        .ad-status.inactive {
+            background-color: rgba(255, 101, 132, 0.15);
+            color: var(--secondary);
+        }
+
+        .ad-status.pending {
+            background-color: rgba(255, 154, 118, 0.15);
+            color: var(--warning);
+        }
+
+        .ad-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background-color: var(--light);
+        }
+
+        .action-btn.view:hover {
+            color: var(--info);
+            border-color: var(--info);
+        }
+
+        .action-btn.edit:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .action-btn.delete:hover {
+            color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+
+        .pagination button {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            color: var(--dark);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 13px;
+        }
+
+        .pagination button.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .pagination button:hover:not(.active) {
+            background-color: var(--light);
+            border-color: var(--primary);
+        }
+
+        /* النوافذ المنبثقة */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            transition: var(--transition);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: var(--dark);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--gray);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius);
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .image-upload {
+            border: 2px dashed #e2e8f0;
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary);
+        }
+
+        .image-upload i {
+            font-size: 30px;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+
+        .image-upload p {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .image-upload span {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .image-preview {
+            width: 100%;
+            height: 150px;
+            border-radius: var(--radius);
+            object-fit: cover;
+            display: none;
+            margin-top: 15px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* معاينة الإعلان */
+        .preview-modal {
+            max-width: 800px;
+        }
+
+        .ad-preview {
+            background: linear-gradient(135deg, #6C63FF, #36D1DC);
+            border-radius: 12px;
+            padding: 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .ad-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80');
+            background-size: cover;
+            opacity: 0.2;
+        }
+
+        .ad-preview-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .ad-preview-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .ad-preview-description {
+            font-size: 18px;
+            margin-bottom: 25px;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .ad-preview-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: white;
+            color: var(--primary);
+            border-radius: 30px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .ad-preview-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .bubbles {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .bubble:nth-child(1) {
+            width: 40px;
+            height: 40px;
+            top: 10%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .bubble:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 20%;
+            left: 15%;
+            animation-delay: 1s;
+        }
+
+        .bubble:nth-child(3) {
+            width: 30px;
+            height: 30px;
+            bottom: 20%;
+            right: 20%;
+            animation-delay: 2s;
+        }
+
+        .bubble:nth-child(4) {
+            width: 50px;
+            height: 50px;
+            bottom: 10%;
+            left: 10%;
+            animation-delay: 3s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        /* زر القائمة للشاشات الصغيرة */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+            z-index: 1001;
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* التجاوب */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-right: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .header {
+                padding: 0 15px;
+            }
+            
+            .user-info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-content {
+                padding: 15px;
+            }
+            
+            .page-actions {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .header-right {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            
+            .header-icon {
+                margin-left: 10px;
+            }
+            
+            .ads-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                margin-left: 10px;
+            }
+            
+            .stat-info h3 {
+                font-size: 20px;
+            }
+            
+            .modal {
+                width: 95%;
+            }
+            
+            .ad-preview-title {
+                font-size: 24px;
+            }
+            
+            .ad-preview-description {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .header {
+                padding: 0 10px;
+            }
+            
+            .page-content {
+                padding: 10px;
+            }
+            
+            .ads-container {
+                padding: 15px;
+            }
+            
+            .modal-body, .modal-header, .modal-footer {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- الشريط الجانبي -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>المتجر الإلكتروني</h1>
+                <p>لوحة التحكم</p>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item">
+                    <i class="fas fa-home"></i>
+                    <span>الرئيسية</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-list"></i>
+                    <span>الفئات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-box"></i>
+                    <span>المنتجات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>الطلبات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-users"></i>
+                    <span>العملاء</span>
+                </div>
+                <div class="menu-item active">
+                    <i class="fas fa-ad"></i>
+                    <span>الإعلانات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>التقارير</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content">
+            <!-- الهيدر -->
+            <div class="header">
+                <div class="header-left">
+                    <button class="toggle-sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2>إدارة الإعلانات</h2>
+                </div>
+                <div class="header-right">
+                    <div class="header-icon">
+                        <i class="fas fa-bell"></i>
+                        <div class="notification-badge">3</div>
+                    </div>
+                    <div class="header-icon">
+                        <i class="fas fa-envelope"></i>
+                        <div class="notification-badge">5</div>
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar">م</div>
+                        <div class="user-info">
+                            <div class="user-name">محمد أحمد</div>
+                            <div class="user-role">مدير النظام</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- محتوى الصفحة -->
+            <div class="page-content">
+                <div class="page-title">
+                    <h2>إدارة الإعلانات</h2>
+                    <div class="date">الثلاثاء، 16 مايو 2023</div>
+                </div>
+
+                <!-- إحصائيات سريعة -->
+                <div class="stats-cards">
+                    <div class="stat-card card-1">
+                        <div class="stat-icon">
+                            <i class="fas fa-ad"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>24</h3>
+                            <p>إجمالي الإعلانات</p>
+                            <div class="stat-trend trend-up">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>3 جديد</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card card-2">
+                        <div class="stat-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>15.2K</h3>
+                            <p>مشاهدات الإعلانات</p>
+                            <div class="stat-trend trend-up">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>12% زيادة</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card card-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-mouse-pointer"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>3.8%</h3>
+                            <p>معدل النقر</p>
+                            <div class="stat-trend trend-down">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>0.5% أقل</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card card-4">
+                        <div class="stat-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>142</h3>
+                            <p>مبيعات من الإعلانات</p>
+                            <div class="stat-trend trend-up">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>8% زيادة</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- شريط البحث والإجراءات -->
+                <div class="page-actions">
+                    <div class="search-box">
+                        <input type="text" placeholder="ابحث عن إعلان...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter"></i>
+                            تصفية
+                        </button>
+                        <button class="btn btn-primary" id="addAdBtn">
+                            <i class="fas fa-plus"></i>
+                            إضافة إعلان
+                        </button>
+                    </div>
+                </div>
+
+                <!-- جدول الإعلانات -->
+                <div class="ads-container">
+                    <div class="ads-header">
+                        <h3>قائمة الإعلانات</h3>
+                        <div class="view-toggle">
+                            <span>عرض 1-10 من 24</span>
+                        </div>
+                    </div>
+
+                    <table class="ads-table">
+                        <thead>
+                            <tr>
+                                <th>الصورة</th>
+                                <th>العنوان</th>
+                                <th>النوع</th>
+                                <th>الموضع</th>
+                                <th>تاريخ البداية</th>
+                                <th>تاريخ النهاية</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="ad-image">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="ad-title">عرض خاص على الهواتف</div>
+                                </td>
+                                <td>
+                                    <span class="ad-type product">إعلان منتج</span>
+                                </td>
+                                <td>
+                                    <span class="ad-position top">أعلى الصفحة</span>
+                                </td>
+                                <td>2023-05-01</td>
+                                <td>2023-05-31</td>
+                                <td>
+                                    <span class="ad-status active">نشط</span>
+                                </td>
+                                <td>
+                                    <div class="ad-actions">
+                                        <button class="action-btn view" data-ad="1">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="action-btn edit" data-ad="1">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete" data-ad="1">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="ad-image">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="ad-title">تخفيضات الصيف</div>
+                                </td>
+                                <td>
+                                    <span class="ad-type promotional">إعلان ترويجي</span>
+                                </td>
+                                <td>
+                                    <span class="ad-position middle">منتصف الصفحة</span>
+                                </td>
+                                <td>2023-05-10</td>
+                                <td>2023-06-10</td>
+                                <td>
+                                    <span class="ad-status active">نشط</span>
+                                </td>
+                                <td>
+                                    <div class="ad-actions">
+                                        <button class="action-btn view" data-ad="2">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="action-btn edit" data-ad="2">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete" data-ad="2">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="ad-image">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="ad-title">عرض نهاية الموسم</div>
+                                </td>
+                                <td>
+                                    <span class="ad-type promotional">إعلان ترويجي</span>
+                                </td>
+                                <td>
+                                    <span class="ad-position bottom">أسفل الصفحة</span>
+                                </td>
+                                <td>2023-04-15</td>
+                                <td>2023-05-15</td>
+                                <td>
+                                    <span class="ad-status inactive">منتهي</span>
+                                </td>
+                                <td>
+                                    <div class="ad-actions">
+                                        <button class="action-btn view" data-ad="3">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="action-btn edit" data-ad="3">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete" data-ad="3">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="ad-image">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="ad-title">إعلان منبثق جديد</div>
+                                </td>
+                                <td>
+                                    <span class="ad-type product">إعلان منتج</span>
+                                </td>
+                                <td>
+                                    <span class="ad-position popup">منبثق</span>
+                                </td>
+                                <td>2023-05-20</td>
+                                <td>2023-06-20</td>
+                                <td>
+                                    <span class="ad-status pending">معلق</span>
+                                </td>
+                                <td>
+                                    <div class="ad-actions">
+                                        <button class="action-btn view" data-ad="4">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="action-btn edit" data-ad="4">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="action-btn delete" data-ad="4">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="pagination">
+                        <button class="active">1</button>
+                        <button>2</button>
+                        <button>3</button>
+                        <button>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- زر القائمة للشاشات الصغيرة -->
+        <button class="mobile-menu-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- نافذة منبثقة لإضافة إعلان -->
+        <div class="modal-overlay" id="addAdModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>إضافة إعلان جديد</h3>
+                    <button class="close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="adType">نوع الإعلان</label>
+                        <select class="form-select" id="adType">
+                            <option value="promotional">إعلان ترويجي</option>
+                            <option value="product">إعلان منتج</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="productGroup" style="display: none;">
+                        <label for="productSelect">المنتج المرتبط</label>
+                        <select class="form-select" id="productSelect">
+                            <option value="">اختر المنتج</option>
+                            <option value="1">هاتف سامسونج جالاكسي S23</option>
+                            <option value="2">لابتوب ديل XPS 13</option>
+                            <option value="3">سماعات أبل AirPods Pro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adTitle">عنوان الإعلان</label>
+                        <input type="text" class="form-control" id="adTitle" placeholder="أدخل عنوان الإعلان">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adDescription">وصف الإعلان</label>
+                        <textarea class="form-control" id="adDescription" rows="3" placeholder="أدخل وصف الإعلان"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adPosition">موضع الإعلان</label>
+                        <select class="form-select" id="adPosition">
+                            <option value="top">أعلى الصفحة (سلايدر)</option>
+                            <option value="middle">منتصف الصفحة</option>
+                            <option value="bottom">أسفل الصفحة</option>
+                            <option value="popup">إعلان منبثق</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startDate">تاريخ البداية</label>
+                            <input type="date" class="form-control" id="startDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">تاريخ النهاية</label>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>صورة الإعلان</label>
+                        <div class="image-upload" id="adImageUpload">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>اسحب وأفلت الصورة هنا أو <span>انقر للاختيار</span></p>
+                        </div>
+                        <img id="adImagePreview" class="image-preview" src="" alt="معاينة صورة الإعلان">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancelAdd">إلغاء</button>
+                    <button class="btn btn-primary" id="saveAd">حفظ الإعلان</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة معاينة الإعلان -->
+        <div class="modal-overlay" id="previewAdModal">
+            <div class="modal preview-modal">
+                <div class="modal-header">
+                    <h3>معاينة الإعلان</h3>
+                    <button class="close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="ad-preview">
+                        <div class="bubbles">
+                            <div class="bubble"></div>
+                            <div class="bubble"></div>
+                            <div class="bubble"></div>
+                            <div class="bubble"></div>
+                        </div>
+                        <div class="ad-preview-content">
+                            <h2 class="ad-preview-title" id="previewTitle">عرض خاص على الهواتف</h2>
+                            <p class="ad-preview-description" id="previewDescription">احصل على خصم يصل إلى 30% على أحدث الهواتف الذكية. عروض محدودة لفترة قصيرة!</p>
+                            <a href="#" class="ad-preview-button">اطلب الآن</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="closePreview">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تفعيل/إلغاء تفعيل الشريط الجانبي
+        document.querySelector('.toggle-sidebar').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('expanded');
+        });
+
+        // تفعيل/إلغاء تفعيل الشريط الجانبي للجوال
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // فتح نافذة إضافة إعلان
+        document.getElementById('addAdBtn').addEventListener('click', function() {
+            document.getElementById('addAdModal').classList.add('active');
+        });
+
+        // إغلاق النوافذ المنبثقة
+        document.querySelectorAll('.close-modal, #cancelAdd, #closePreview').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            });
+        });
+
+        // إظهار/إخفاء حقل المنتج بناءً على نوع الإعلان
+        document.getElementById('adType').addEventListener('change', function() {
+            const productGroup = document.getElementById('productGroup');
+            if (this.value === 'product') {
+                productGroup.style.display = 'block';
+            } else {
+                productGroup.style.display = 'none';
+            }
+        });
+
+        // معاينة الصورة المرفوعة
+        document.getElementById('adImageUpload').addEventListener('click', function() {
+            // في التطبيق الحقيقي، هنا سيتم فتح نافذة اختيار الملفات
+            // لأغراض العرض، سنعرض صورة افتراضية
+            const imagePreview = document.getElementById('adImagePreview');
+            imagePreview.src = 'https://via.placeholder.com/600x300?text=صورة+الإعلان';
+            imagePreview.style.display = 'block';
+        });
+
+        // حفظ الإعلان
+        document.getElementById('saveAd').addEventListener('click', function() {
+            const adTitle = document.getElementById('adTitle').value;
+            const adType = document.getElementById('adType').value;
+            
+            if (!adTitle) {
+                alert('يرجى إدخال عنوان الإعلان');
+                return;
+            }
+            
+            if (adType === 'product' && !document.getElementById('productSelect').value) {
+                alert('يرجى اختيار المنتج المرتبط');
+                return;
+            }
+            
+            // في التطبيق الحقيقي، هنا سيتم إرسال البيانات إلى الخادم
+            alert(`تم إضافة الإعلان "${adTitle}" بنجاح`);
+            document.getElementById('addAdModal').classList.remove('active');
+            
+            // إعادة تعيين النموذج
+            document.getElementById('adTitle').value = '';
+            document.getElementById('adDescription').value = '';
+            document.getElementById('adImagePreview').style.display = 'none';
+            document.getElementById('productGroup').style.display = 'none';
+            document.getElementById('adType').value = 'promotional';
+        });
+
+        // فتح معاينة الإعلان
+        document.querySelectorAll('.action-btn.view').forEach(button => {
+            button.addEventListener('click', function() {
+                const adId = this.getAttribute('data-ad');
+                
+                // في التطبيق الحقيقي، هنا سيتم جلب بيانات الإعلان من الخادم
+                // لأغراض العرض، سنستخدم بيانات افتراضية
+                document.getElementById('previewTitle').textContent = 'عرض خاص على الهواتف';
+                document.getElementById('previewDescription').textContent = 'احصل على خصم يصل إلى 30% على أحدث الهواتف الذكية. عروض محدودة لفترة قصيرة!';
+                
+                document.getElementById('previewAdModal').classList.add('active');
+            });
+        });
+
+        // تعديل الإعلان
+        document.querySelectorAll('.action-btn.edit').forEach(button => {
+            button.addEventListener('click', function() {
+                const adId = this.getAttribute('data-ad');
+                
+                // فتح نافذة إضافة إعلان مع تعبئة البيانات
+                document.getElementById('addAdModal').classList.add('active');
+                document.querySelector('.modal-header h3').textContent = 'تعديل الإعلان';
+                
+                // في التطبيق الحقيقي، هنا سيتم جلب بيانات الإعلان من الخادم
+                // لأغراض العرض، سنستخدم بيانات افتراضية
+                document.getElementById('adTitle').value = 'عرض خاص على الهواتف';
+                document.getElementById('adDescription').value = 'احصل على خصم يصل إلى 30% على أحدث الهواتف الذكية';
+                document.getElementById('adType').value = 'product';
+                document.getElementById('productGroup').style.display = 'block';
+                document.getElementById('productSelect').value = '1';
+                document.getElementById('adPosition').value = 'top';
+                document.getElementById('startDate').value = '2023-05-01';
+                document.getElementById('endDate').value = '2023-05-31';
+                document.getElementById('adImagePreview').src = 'https://via.placeholder.com/600x300?text=صورة+الإعلان';
+                document.getElementById('adImagePreview').style.display = 'block';
+            });
+        });
+
+        // حذف الإعلان
+        document.querySelectorAll('.action-btn.delete').forEach(button => {
+            button.addEventListener('click', function() {
+                const adId = this.getAttribute('data-ad');
+                
+                if (confirm('هل أنت متأكد من حذف هذا الإعلان؟')) {
+                    // في التطبيق الحقيقي، هنا سيتم إرسال طلب الحذف إلى الخادم
+                    alert('تم حذف الإعلان بنجاح');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

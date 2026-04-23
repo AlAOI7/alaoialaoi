@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تتبع الطلب | Be Pretty</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            right: 18px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background-color: #ddd;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .timeline-icon {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 40px;
+            height: 40px;
+            background-color: #ff3366;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .timeline-item.active .timeline-icon {
+            background-color: #ff3366;
+        }
+        .timeline-item.completed .timeline-icon {
+            background-color: #28a745;
+        }
+        .timeline-item.completed .timeline-icon i {
+            color: #fff;
+        }
+        .timeline-content {
+            margin-right: 60px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white shadow-sm p-3 fixed-top">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="orders.html" class="btn"><i class="fas fa-arrow-right fa-lg text-dark"></i></a>
+            <h5 class="mb-0 fw-bold">تتبع الطلب</h5>
+            <span></span>
+        </div>
+    </header>
+
+    <main class="container-fluid py-4" style="margin-top: 60px; margin-bottom: 70px;">
+        <section class="track-section bg-white p-4 rounded-3 shadow-sm mb-4">
+            <div class="text-center mb-4">
+                <h5 class="fw-bold">الطلب #<span id="track-order-id">1004</span></h5>
+                <p class="text-muted mb-0">حالة الشحن: <span class="fw-bold text-info">تم الشحن</span></p>
+                <p class="small text-muted">تاريخ الشحن: 25 سبتمبر 2025</p>
+            </div>
+            
+            <div class="timeline">
+                <div class="timeline-item completed">
+                    <div class="timeline-icon"><i class="fas fa-check"></i></div>
+                    <div class="timeline-content">
+                        <h6 class="fw-bold mb-1">تم تأكيد الطلب</h6>
+                        <p class="small mb-0 text-muted">تم استلام طلبك وبدأنا في تجهيزه.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item completed">
+                    <div class="timeline-icon"><i class="fas fa-check"></i></div>
+                    <div class="timeline-content">
+                        <h6 class="fw-bold mb-1">جاري التجهيز</h6>
+                        <p class="small mb-0 text-muted">فريقنا يعمل على تحضير منتجاتك للشحن.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item active">
+                    <div class="timeline-icon"><i class="fas fa-truck-moving"></i></div>
+                    <div class="timeline-content">
+                        <h6 class="fw-bold mb-1">تم الشحن</h6>
+                        <p class="small mb-0 text-muted">طلبك في طريقه إليك. رقم التتبع: <span class="fw-bold">123456789</span></p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon bg-secondary"><i class="fas fa-box-open"></i></div>
+                    <div class="timeline-content">
+                        <h6 class="fw-bold mb-1">في الطريق للتوصيل</h6>
+                        <p class="small mb-0 text-muted">سيتصل بك مندوب التوصيل قريباً.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon bg-secondary"><i class="fas fa-home"></i></div>
+                    <div class="timeline-content">
+                        <h6 class="fw-bold mb-1">تم التوصيل</h6>
+                        <p class="small mb-0 text-muted">تم توصيل طلبك بنجاح. شكراً لك!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="bottom-tab-bar fixed-bottom bg-white shadow-lg d-flex justify-content-around align-items-center py-2">
+        <a href="home.html" class="tab-item text-center text-decoration-none">
+            <i class="fas fa-home fa-lg text-muted"></i>
+            <span class="d-block mt-1">الرئيسية</span>
+        </a>
+        <a href="categories.html" class="tab-item text-center text-decoration-none">
+            <i class="fas fa-th-large fa-lg text-muted"></i>
+            <span class="d-block mt-1">الفئات</span>
+        </a>
+        <a href="cart.html" class="tab-item text-center text-decoration-none">
+            <i class="fas fa-shopping-cart fa-lg text-muted"></i>
+            <span class="d-block mt-1">السلة</span>
+        </a>
+        <a href="orders.html" class="tab-item text-center text-decoration-none active">
+            <i class="fas fa-list-alt fa-lg text-danger"></i>
+            <span class="d-block mt-1 fw-bold text-danger">الطلبات</span>
+        </a>
+        <a href="profile.html" class="tab-item text-center text-decoration-none">
+            <i class="fas fa-user fa-lg text-muted"></i>
+            <span class="d-block mt-1">حسابي</span>
+        </a>
+    </nav>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

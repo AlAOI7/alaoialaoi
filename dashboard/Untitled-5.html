@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - الوصول السريع</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .dashboard-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .quick-access-title {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 2rem;
+            color: #333;
+            position: relative;
+        }
+        
+        .quick-access-title:after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #667eea, #764ba2);
+            bottom: -10px;
+            right: 50%;
+            transform: translateX(50%);
+            border-radius: 2px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .card-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 30px;
+            color: white;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .card-desc {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .card-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+            width: 90%;
+        }
+        
+        .card-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .category-section {
+            margin-bottom: 50px;
+        }
+        
+        .category-title {
+            font-size: 1.8rem;
+            color: #444;
+            margin-bottom: 25px;
+            padding-right: 15px;
+            border-right: 5px solid #667eea;
+        }
+        
+        /* ألوان متنوعة للأيقونات */
+        .color-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .color-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .color-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .color-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .color-5 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .color-6 { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .color-7 { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+        .color-8 { background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%); }
+        .color-9 { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        .color-10 { background: linear-gradient(135deg, #a3bded 0%, #6991c7 100%); }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+            
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+            
+            .quick-access-title {
+                font-size: 1.6rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .dashboard-card {
+                padding: 20px 15px;
+                min-height: 160px;
+            }
+            
+            .card-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- رأس لوحة التحكم -->
+    <div class="dashboard-header">
+        <h1>لوحة تحكم المتجر الإلكتروني</h1>
+        <p>مرحباً بك! استخدم الأزرار أدناه للوصول السريع إلى أقسام النظام</p>
+    </div>
+    
+    <!-- قسم الوصول السريع -->
+    <h2 class="quick-access-title">الوصول السريع</h2>
+    
+    <!-- قسم الطلبات -->
+    <div class="category-section">
+        <h3 class="category-title">الطلبات والمبيعات</h3>
+        <div class="dashboard-grid">
+            <!-- الطلبات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-1">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <h3 class="card-title">الطلبات</h3>
+                <p class="card-desc">إدارة جميع طلبات العملاء</p>
+                <a href="orders.php" class="card-btn">عرض الطلبات</a>
+            </div>
+            
+            <!-- الطلبات الجديدة -->
+            <div class="dashboard-card">
+                <div class="card-icon color-2">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <h3 class="card-title">طلبات جديدة</h3>
+                <p class="card-desc">الطلبات التي تحتاج معالجة</p>
+                <a href="orders_new.php" class="card-btn">عرض الطلبات الجديدة</a>
+            </div>
+            
+            <!-- المبيعات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-3">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <h3 class="card-title">نقطة البيع</h3>
+                <p class="card-desc">نظام البيع المباشر</p>
+                <a href="pos.php" class="card-btn">فتح نقطة البيع</a>
+            </div>
+            
+            <!-- المرتجعات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-4">
+                    <i class="fas fa-undo"></i>
+                </div>
+                <h3 class="card-title">المرتجعات</h3>
+                <p class="card-desc">إدارة طلبات الإرجاع</p>
+                <a href="returns.php" class="card-btn">إدارة المرتجعات</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- قسم المنتجات -->
+    <div class="category-section">
+        <h3 class="category-title">إدارة المنتجات</h3>
+        <div class="dashboard-grid">
+            <!-- جميع المنتجات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-5">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <h3 class="card-title">جميع المنتجات</h3>
+                <p class="card-desc">عرض وتعديل المنتجات</p>
+                <a href="products.php" class="card-btn">عرض المنتجات</a>
+            </div>
+            
+            <!-- إضافة منتج -->
+            <div class="dashboard-card">
+                <div class="card-icon color-6">
+                    <i class="fas fa-plus-square"></i>
+                </div>
+                <h3 class="card-title">إضافة منتج جديد</h3>
+                <p class="card-desc">إضافة منتج جديد للمتجر</p>
+                <a href="add_product.php" class="card-btn">إضافة منتج</a>
+            </div>
+            
+            <!-- التصنيفات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-1">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h3 class="card-title">التصنيفات</h3>
+                <p class="card-desc">إدارة تصنيفات المنتجات</p>
+                <a href="categories.php" class="card-btn">إدارة التصنيفات</a>
+            </div>
+            
+            <!-- العلامات التجارية -->
+            <div class="dashboard-card">
+                <div class="card-icon color-2">
+                    <i class="fas fa-trademark"></i>
+                </div>
+                <h3 class="card-title">العلامات التجارية</h3>
+                <p class="card-desc">إدارة ماركات المنتجات</p>
+                <a href="brand.php" class="card-btn">إدارة الماركات</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- قسم العملاء -->
+    <div class="category-section">
+        <h3 class="category-title">العملاء والمستخدمين</h3>
+        <div class="dashboard-grid">
+            <!-- جميع العملاء -->
+            <div class="dashboard-card">
+                <div class="card-icon color-3">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="card-title">جميع العملاء</h3>
+                <p class="card-desc">إدارة حسابات العملاء</p>
+                <a href="customers.php" class="card-btn">عرض العملاء</a>
+            </div>
+            
+            <!-- العملاء الجدد -->
+            <div class="dashboard-card">
+                <div class="card-icon color-4">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h3 class="card-title">عملاء جدد</h3>
+                <p class="card-desc">العملاء المسجلين حديثاً</p>
+                <a href="new_customers.php" class="card-btn">عرض العملاء الجدد</a>
+            </div>
+            
+            <!-- المستخدمين -->
+            <div class="dashboard-card">
+                <div class="card-icon color-5">
+                    <i class="fas fa-user-cog"></i>
+                </div>
+                <h3 class="card-title">المستخدمين</h3>
+                <p class="card-desc">إدارة مستخدمي النظام</p>
+                <a href="adduser.php" class="card-btn">إدارة المستخدمين</a>
+            </div>
+            
+            <!-- الدردشة والدعم -->
+            <div class="dashboard-card">
+                <div class="card-icon color-6">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3 class="card-title">الدعم الفني</h3>
+                <p class="card-desc">الدردشة مع العملاء</p>
+                <a href="chat.php" class="card-btn">فتح الدردشة</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- قسم المالية -->
+    <div class="category-section">
+        <h3 class="category-title">المالية والمشتريات</h3>
+        <div class="dashboard-grid">
+            <!-- البنك -->
+            <div class="dashboard-card">
+                <div class="card-icon color-1">
+                    <i class="fas fa-university"></i>
+                </div>
+                <h3 class="card-title">البنك</h3>
+                <p class="card-desc">إدارة الحسابات البنكية</p>
+                <a href="banck.php" class="card-btn">إدارة البنك</a>
+            </div>
+            
+            <!-- المشتريات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-2">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <h3 class="card-title">المشتريات</h3>
+                <p class="card-desc">إدارة مشتريات المتجر</p>
+                <a href="purchases.php" class="card-btn">إدارة المشتريات</a>
+            </div>
+            
+            <!-- الموردين -->
+            <div class="dashboard-card">
+                <div class="card-icon color-3">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <h3 class="card-title">الموردين</h3>
+                <p class="card-desc">إدارة موردي المنتجات</p>
+                <a href="suppliers.php" class="card-btn">إدارة الموردين</a>
+            </div>
+            
+            <!-- طرق الدفع -->
+            <div class="dashboard-card">
+                <div class="card-icon color-4">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h3 class="card-title">طرق الدفع</h3>
+                <p class="card-desc">إعدادات طرق الدفع</p>
+                <a href="payment_methods.php" class="card-btn">إعدادات الدفع</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- قسم التسويق -->
+    <div class="category-section">
+        <h3 class="category-title">التسويق والعروض</h3>
+        <div class="dashboard-grid">
+            <!-- العروض -->
+            <div class="dashboard-card">
+                <div class="card-icon color-5">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <h3 class="card-title">العروض</h3>
+                <p class="card-desc">إدارة عروض المتجر</p>
+                <a href="offers.php" class="card-btn">إدارة العروض</a>
+            </div>
+            
+            <!-- القسائم -->
+            <div class="dashboard-card">
+                <div class="card-icon color-6">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <h3 class="card-title">القسائم</h3>
+                <p class="card-desc">إدارة كوبونات الخصم</p>
+                <a href="coupons.php" class="card-btn">إدارة القسائم</a>
+            </div>
+            
+            <!-- المدونة -->
+            <div class="dashboard-card">
+                <div class="card-icon color-1">
+                    <i class="fas fa-blog"></i>
+                </div>
+                <h3 class="card-title">المدونة</h3>
+                <p class="card-desc">إدارة مقالات المدونة</p>
+                <a href="blog.php" class="card-btn">إدارة المدونة</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- قسم الإعدادات -->
+    <div class="category-section">
+        <h3 class="category-title">الإعدادات والتقارير</h3>
+        <div class="dashboard-grid">
+            <!-- الإعدادات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-2">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3 class="card-title">الإعدادات</h3>
+                <p class="card-desc">إعدادات النظام العامة</p>
+                <a href="settings.php" class="card-btn">فتح الإعدادات</a>
+            </div>
+            
+            <!-- العملات -->
+            <div class="dashboard-card">
+                <div class="card-icon color-3">
+                    <i class="fas fa-money-bill-alt"></i>
+                </div>
+                <h3 class="card-title">العملات</h3>
+                <p class="card-desc">إدارة عملات المتجر</p>
+                <a href="currencies.php" class="card-btn">إدارة العملات</a>
+            </div>
+            
+            <!-- الاستيراد والتصدير -->
+            <div class="dashboard-card">
+                <div class="card-icon color-4">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <h3 class="card-title">استيراد وتصدير</h3>
+                <p class="card-desc">استيراد وتصدير المنتجات</p>
+                <a href="import_export.php" class="card-btn">الاستيراد والتصدير</a>
+            </div>
+            
+            <!-- التقارير -->
+            <div class="dashboard-card">
+                <div class="card-icon color-5">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3 class="card-title">التقارير</h3>
+                <p class="card-desc">تقارير المبيعات والأداء</p>
+                <a href="analytics.php" class="card-btn">عرض التقارير</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // إضافة تأثيرات تفاعلية
+        document.addEventListener('DOMContentLoaded', function() {
+            // إضافة تأثير للبطاقات عند التمرير
+            const cards = document.querySelectorAll('.dashboard-card');
+            
+            // تحريك البطاقات عند التمرير
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            cards.forEach(card => {
+                card.style.opacity = 0;
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                observer.observe(card);
+            });
+            
+            // تحسين تجربة النقر على الأزرار
+            const buttons = document.querySelectorAll('.card-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // إضافة تأثير النقر
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 200);
+                    
+                    // هنا يمكن إضافة تحميل الصفحة أو AJAX حسب الحاجة
+                });
+            });
+        });
+    </script>
+</body>
+</html>

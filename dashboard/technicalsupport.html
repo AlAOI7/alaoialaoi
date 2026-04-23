@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الدعم الفني المتكامل</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8A84FF;
+            --primary-dark: #524BC2;
+            --secondary: #FF6584;
+            --accent: #36D1DC;
+            --success: #4ECDC4;
+            --warning: #FF9A76;
+            --info: #6A89CC;
+            --light: #F8F9FD;
+            --dark: #2D3748;
+            --gray: #718096;
+            --sidebar-width: 320px;
+            --header-height: 70px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2f8 100%);
+            color: var(--dark);
+            direction: rtl;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* التصميم الرئيسي */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* الشريط الجانبي */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            transition: var(--transition);
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .logo h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .logo p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-right: 4px solid transparent;
+            position: relative;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-right-color: var(--accent);
+        }
+
+        .menu-item i {
+            margin-left: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-right: var(--sidebar-width);
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-right: 0;
+        }
+
+        /* الهيدر */
+        .header {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 0 20px;
+            height: var(--header-height);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--gray);
+            margin-left: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .toggle-sidebar:hover {
+            background-color: var(--light);
+            color: var(--primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .header-icon {
+            position: relative;
+            margin-left: 15px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .header-icon:hover {
+            background-color: var(--light);
+        }
+
+        .header-icon i {
+            font-size: 18px;
+            color: var(--gray);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: linear-gradient(135deg, var(--secondary), var(--warning));
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 30px;
+            transition: var(--transition);
+        }
+
+        .user-profile:hover {
+            background-color: var(--light);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--gray);
+        }
+
+        /* محتوى الصفحة */
+        .page-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-title {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title h2 {
+            font-size: 24px;
+            color: var(--dark);
+            font-weight: 700;
+        }
+
+        .page-title .date {
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* شاشة الدعم الفني */
+        .support-container {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            height: calc(100vh - 140px);
+        }
+
+        /* لوحة المحادثات */
+        .conversations-panel {
+            width: 350px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .conversations-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .conversations-header h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px;
+            background-color: var(--light);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .conversation-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+        }
+
+        .conversation-item:hover, .conversation-item.active {
+            background-color: var(--light);
+        }
+
+        .conversation-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            margin-left: 12px;
+            font-size: 16px;
+        }
+
+        .conversation-info {
+            flex: 1;
+        }
+
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .conversation-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .conversation-time {
+            font-size: 11px;
+            color: var(--gray);
+        }
+
+        .conversation-preview {
+            font-size: 13px;
+            color: var(--gray);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .conversation-message {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        .unread-badge {
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* لوحة المحادثة */
+        .chat-panel {
+            flex: 1;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-user {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            margin-left: 12px;
+        }
+
+        .chat-user-info h4 {
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+
+        .chat-user-info p {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--light);
+            color: var(--gray);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chat-action-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background-color: #f0f2f5;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.7;
+            text-align: left;
+        }
+
+        .message.sent .message-time {
+            text-align: right;
+        }
+
+        .chat-input {
+            padding: 15px 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 24px;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .chat-input-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .chat-input-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--light);
+            color: var(--gray);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chat-input-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .send-btn {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .send-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* حالة عدم وجود محادثة محددة */
+        .no-chat-selected {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+        }
+
+        .no-chat-selected i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-chat-selected h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* التجاوب */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-right: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .header {
+                padding: 0 15px;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            .support-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .conversations-panel {
+                width: 100%;
+                height: 300px;
+            }
+            
+            .chat-panel {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-content {
+                padding: 15px;
+            }
+            
+            .conversations-panel {
+                height: 350px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .conversations-panel {
+                width: 100%;
+            }
+            
+            .chat-header {
+                padding: 10px 15px;
+            }
+            
+            .chat-messages {
+                padding: 15px;
+            }
+            
+            .chat-input {
+                padding: 10px 15px;
+            }
+            
+            .chat-input-btn {
+                width: 35px;
+                height: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- الشريط الجانبي -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>متجرنا الإلكتروني</h1>
+                <p>لوحة التحكم الإدارية</p>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item">
+                    <i class="fas fa-home"></i>
+                    <span>الرئيسية</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>الطلبات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-box"></i>
+                    <span>المنتجات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-university"></i>
+                    <span>البنوك والحسابات</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-users"></i>
+                    <span>العملاء</span>
+                </div>
+                <div class="menu-item active">
+                    <i class="fas fa-headset"></i>
+                    <span>الدعم الفني</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>التقارير</span>
+                </div>
+                <div class="menu-item">
+                    <i class="fas fa-cog"></i>
+                    <span>الإعدادات</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content">
+            <!-- الهيدر -->
+            <div class="header">
+                <div class="header-left">
+                    <button class="toggle-sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="page-info">
+                        <h2>الدعم الفني والتواصل مع العملاء</h2>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-icon">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationCount">5</span>
+                    </div>
+                    <div class="user-profile">
+                        <div class="user-avatar">م</div>
+                        <div class="user-info">
+                            <div class="user-name">محمد أحمد</div>
+                            <div class="user-role">مدير الدعم الفني</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- محتوى الصفحة -->
+            <div class="page-content">
+                <div class="page-title">
+                    <h2>نظام الدردشة والدعم الفني</h2>
+                    <div class="date" id="currentDate">السبت، 15 مايو 2023</div>
+                </div>
+
+                <!-- شاشة الدعم الفني -->
+                <div class="support-container">
+                    <!-- لوحة المحادثات -->
+                    <div class="conversations-panel">
+                        <div class="conversations-header">
+                            <h3>المحادثات</h3>
+                            <div class="search-box">
+                                <input type="text" id="searchConversations" placeholder="ابحث في المحادثات...">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="filters">
+                                <button class="filter-btn active" data-filter="all">الكل</button>
+                                <button class="filter-btn" data-filter="unread">غير مقروء</button>
+                                <button class="filter-btn" data-filter="pending">معلقة</button>
+                                <button class="filter-btn" data-filter="closed">مغلقة</button>
+                            </div>
+                        </div>
+                        <div class="conversations-list" id="conversationsList">
+                            <!-- سيتم تعبئة المحادثات ديناميكياً -->
+                        </div>
+                    </div>
+
+                    <!-- لوحة المحادثة -->
+                    <div class="chat-panel" id="chatPanel">
+                        <div class="no-chat-selected" id="noChatSelected">
+                            <i class="fas fa-comments"></i>
+                            <h3>اختر محادثة لبدء الدردشة</h3>
+                            <p>اختر محادثة من القائمة لرؤية الرسائل وإرسال رسالة جديدة</p>
+                        </div>
+                        
+                        <div class="chat-header" id="chatHeader" style="display: none;">
+                            <div class="chat-user">
+                                <div class="chat-user-avatar" id="chatUserAvatar">أ</div>
+                                <div class="chat-user-info">
+                                    <h4 id="chatUserName">أحمد محمد</h4>
+                                    <p id="chatUserStatus">آخر ظهور: الآن</p>
+                                </div>
+                            </div>
+                            <div class="chat-status">
+                                <div class="status-dot" id="statusDot"></div>
+                                <span id="statusText">متصل الآن</span>
+                            </div>
+                            <div class="chat-actions">
+                                <button class="chat-action-btn">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="chat-action-btn">
+                                    <i class="fas fa-video"></i>
+                                </button>
+                                <button class="chat-action-btn">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-messages" id="chatMessages" style="display: none;">
+                            <!-- سيتم تعبئة الرسائل ديناميكياً -->
+                        </div>
+                        
+                        <div class="chat-input" id="chatInput" style="display: none;">
+                            <div class="chat-input-actions">
+                                <button class="chat-input-btn">
+                                    <i class="fas fa-paperclip"></i>
+                                </button>
+                                <button class="chat-input-btn">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                            </div>
+                            <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
+                            <button class="chat-input-btn send-btn" id="sendMessageBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // قاعدة بيانات محاكاة للمحادثات والرسائل
+        const conversationsData = {
+            "all": [
+                {
+                    id: 1,
+                    userId: 101,
+                    userName: "أحمد محمد",
+                    userInitial: "أ",
+                    userStatus: "online",
+                    lastSeen: "الآن",
+                    unreadCount: 2,
+                    status: "active",
+                    messages: [
+                        { id: 1, text: "مرحباً، أنا أحمد. أود الاستفسار عن حالة طلبي رقم #12345", time: "10:30 ص", type: "received" },
+                        { id: 2, text: "مرحباً أحمد، شكراً لتواصلك معنا. دعني أتحقق من حالة طلبك", time: "10:32 ص", type: "sent" },
+                        { id: 3, text: "طلبتك #12345 حالياً في مرحلة التغليف وسيتم شحنه خلال 24 ساعة", time: "10:33 ص", type: "sent" },
+                        { id: 4, text: "شكراً لك على المعلومة. هل يمكنني تغيير عنوان الشحن؟", time: "10:35 ص", type: "received" },
+                        { id: 5, text: "نعم بالطبع، يمكنني مساعدتك في تغيير عنوان الشحن. يرجى إرسال العنوان الجديد", time: "10:36 ص", type: "sent" },
+                        { id: 6, text: "العنوان الجديد: شارع الملك فهد، الرياض 12345", time: "10:40 ص", type: "received" },
+                        { id: 7, text: "تم تحديث العنوان بنجاح. سيصلك إشعار عند شحن الطلب", time: "10:42 ص", type: "sent" },
+                        { id: 8, text: "شكراً جزيلاً على مساعدتك!", time: "10:45 ص", type: "received" }
+                    ],
+                    lastMessage: "شكراً على مساعدتك في حل المشكلة",
+                    lastMessageTime: "10:45 ص"
+                },
+                {
+                    id: 2,
+                    userId: 102,
+                    userName: "سارة عبدالله",
+                    userInitial: "س",
+                    userStatus: "offline",
+                    lastSeen: "منذ ساعتين",
+                    unreadCount: 1,
+                    status: "pending",
+                    messages: [
+                        { id: 1, text: "مرحباً، أنا سارة. أحتاج مساعدة في عملية الدفع", time: "09:15 ص", type: "received" },
+                        { id: 2, text: "مرحباً سارة، سأساعدك في ذلك. ما هي المشكلة التي تواجهينها؟", time: "09:20 ص", type: "sent" },
+                        { id: 3, text: "عند محاولة الدفع، يظهر لي خطأ 'تم رفض العملية'", time: "09:22 ص", type: "received" },
+                        { id: 4, text: "هل يمكنك إرسال لقطة شاشة للخطأ؟", time: "09:25 ص", type: "sent" }
+                    ],
+                    lastMessage: "أحتاج مساعدة في عملية الدفع",
+                    lastMessageTime: "أمس"
+                },
+                {
+                    id: 3,
+                    userId: 103,
+                    userName: "خالد علي",
+                    userInitial: "خ",
+                    userStatus: "online",
+                    lastSeen: "الآن",
+                    unreadCount: 0,
+                    status: "active",
+                    messages: [
+                        { id: 1, text: "المنتج وصل بتأخير، أريد استفسار عن السبب", time: "14:30 م", type: "received" },
+                        { id: 2, text: "أهلاً بك خالد، أعتذر عن التأخير. دعني أتحقق من حالة الشحن", time: "14:35 م", type: "sent" },
+                        { id: 3, text: "لقد وجدت أن التأخير كان بسبب ظروف جوية أثرت على الشحن", time: "14:40 م", type: "sent" },
+                        { id: 4, text: "شكراً للتوضيح. هل يمكنني الحصول على خصم كتعويض عن التأخير؟", time: "14:45 م", type: "received" }
+                    ],
+                    lastMessage: "المنتج وصل بتأخير، أريد استفسار عن السبب",
+                    lastMessageTime: "أمس"
+                },
+                {
+                    id: 4,
+                    userId: 104,
+                    userName: "فاطمة ناصر",
+                    userInitial: "ف",
+                    userStatus: "offline",
+                    lastSeen: "منذ 3 أيام",
+                    unreadCount: 0,
+                    status: "closed",
+                    messages: [
+                        { id: 1, text: "مرحباً، لدي مشكلة في تفعيل الحساب", time: "11:10 ص", type: "received" },
+                        { id: 2, text: "مرحباً فاطمة، سأساعدك في تفعيل حسابك. هل يمكنك إرسال بريدك الإلكتروني؟", time: "11:15 ص", type: "sent" },
+                        { id: 3, text: "fatima@example.com", time: "11:20 ص", type: "received" },
+                        { id: 4, text: "شكراً، لقد تم تفعيل حسابك بنجاح. يمكنك تسجيل الدخول الآن", time: "11:25 ص", type: "sent" },
+                        { id: 5, text: "شكراً لكم، المشكلة تم حلها", time: "11:30 ص", type: "received" }
+                    ],
+                    lastMessage: "شكراً لكم، المشكلة تم حلها",
+                    lastMessageTime: "١٥ مايو"
+                },
+                {
+                    id: 5,
+                    userId: 105,
+                    userName: "ماجد راشد",
+                    userInitial: "م",
+                    userStatus: "online",
+                    lastSeen: "الآن",
+                    unreadCount: 3,
+                    status: "active",
+                    messages: [
+                        { id: 1, text: "أحتاج مساعدة فنية في استخدام النظام", time: "13:20 م", type: "received" },
+                        { id: 2, text: "مرحباً ماجد، سأساعدك في استخدام النظام. ما هي الصعوبة التي تواجهها؟", time: "13:25 م", type: "sent" }
+                    ],
+                    lastMessage: "أحتاج مساعدة فنية في استخدام النظام",
+                    lastMessageTime: "١٤ مايو"
+                }
+            ],
+            "unread": [],
+            "pending": [],
+            "closed": []
+        };
+
+        // عناصر DOM
+        const toggleSidebar = document.querySelector('.toggle-sidebar');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+        const conversationsList = document.getElementById('conversationsList');
+        const searchConversations = document.getElementById('searchConversations');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const chatPanel = document.getElementById('chatPanel');
+        const noChatSelected = document.getElementById('noChatSelected');
+        const chatHeader = document.getElementById('chatHeader');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const chatUserAvatar = document.getElementById('chatUserAvatar');
+        const chatUserName = document.getElementById('chatUserName');
+        const chatUserStatus = document.getElementById('chatUserStatus');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const messageInput = document.getElementById('messageInput');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const notificationCount = document.getElementById('notificationCount');
+        const currentDate = document.getElementById('currentDate');
+
+        // المتغيرات العامة
+        let currentFilter = 'all';
+        let currentConversationId = null;
+        let allConversations = [...conversationsData.all];
+
+        // تهيئة التطبيق
+        document.addEventListener('DOMContentLoaded', function() {
+            // تعيين التاريخ الحالي
+            setCurrentDate();
+            
+            // تحميل المحادثات
+            loadConversations();
+            
+            // إضافة مستمعي الأحداث
+            addEventListeners();
+        });
+
+        // تعيين التاريخ الحالي
+        function setCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateString = now.toLocaleDateString('ar-SA', options);
+            currentDate.textContent = dateString;
+        }
+
+        // تحميل المحادثات
+        function loadConversations() {
+            conversationsList.innerHTML = '';
+            
+            let conversationsToShow = [...allConversations];
+            
+            // تطبيق الفلتر
+            if (currentFilter === 'unread') {
+                conversationsToShow = conversationsToShow.filter(conv => conv.unreadCount > 0);
+            } else if (currentFilter === 'pending') {
+                conversationsToShow = conversationsToShow.filter(conv => conv.status === 'pending');
+            } else if (currentFilter === 'closed') {
+                conversationsToShow = conversationsToShow.filter(conv => conv.status === 'closed');
+            }
+            
+            // تحديث عدد الإشعارات
+            updateNotificationCount();
+            
+            // عرض المحادثات
+            if (conversationsToShow.length === 0) {
+                conversationsList.innerHTML = '<div class="no-conversations" style="text-align: center; padding: 20px; color: var(--gray);">لا توجد محادثات</div>';
+                return;
+            }
+            
+            conversationsToShow.forEach(conversation => {
+                const conversationItem = document.createElement('div');
+                conversationItem.className = 'conversation-item';
+                if (conversation.id === currentConversationId) {
+                    conversationItem.classList.add('active');
+                }
+                
+                conversationItem.innerHTML = `
+                    <div class="conversation-avatar">${conversation.userInitial}</div>
+                    <div class="conversation-info">
+                        <div class="conversation-header">
+                            <div class="conversation-name">${conversation.userName}</div>
+                            <div class="conversation-time">${conversation.lastMessageTime}</div>
+                        </div>
+                        <div class="conversation-preview">
+                            <div class="conversation-message">${conversation.lastMessage}</div>
+                            ${conversation.unreadCount > 0 ? `<div class="unread-badge">${conversation.unreadCount}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                conversationItem.addEventListener('click', () => {
+                    selectConversation(conversation.id);
+                });
+                
+                conversationsList.appendChild(conversationItem);
+            });
+        }
+
+        // تحديث عدد الإشعارات
+        function updateNotificationCount() {
+            const unreadConversations = allConversations.filter(conv => conv.unreadCount > 0);
+            const totalUnread = unreadConversations.reduce((total, conv) => total + conv.unreadCount, 0);
+            notificationCount.textContent = totalUnread;
+        }
+
+        // تحديد محادثة
+        function selectConversation(conversationId) {
+            currentConversationId = conversationId;
+            const conversation = allConversations.find(conv => conv.id === conversationId);
+            
+            if (!conversation) return;
+            
+            // تحديث واجهة المحادثة
+            noChatSelected.style.display = 'none';
+            chatHeader.style.display = 'flex';
+            chatMessages.style.display = 'flex';
+            chatInput.style.display = 'flex';
+            
+            // تحديث رأس المحادثة
+            chatUserAvatar.textContent = conversation.userInitial;
+            chatUserName.textContent = conversation.userName;
+            chatUserStatus.textContent = conversation.userStatus === 'online' ? 'متصل الآن' : `آخر ظهور: ${conversation.lastSeen}`;
+            
+            // تحديث حالة الاتصال
+            if (conversation.userStatus === 'online') {
+                statusDot.style.backgroundColor = 'var(--success)';
+                statusText.textContent = 'متصل الآن';
+            } else {
+                statusDot.style.backgroundColor = 'var(--gray)';
+                statusText.textContent = 'غير متصل';
+            }
+            
+            // تحميل الرسائل
+            loadMessages(conversation.messages);
+            
+            // إعادة تحميل قائمة المحادثات لتحديد النشطة
+            loadConversations();
+            
+            // إعادة تعيين الرسائل غير المقروءة
+            if (conversation.unreadCount > 0) {
+                conversation.unreadCount = 0;
+                updateNotificationCount();
+            }
+        }
+
+        // تحميل الرسائل
+        function loadMessages(messages) {
+            chatMessages.innerHTML = '';
+            
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${message.type}`;
+                messageElement.innerHTML = `
+                    <div class="message-text">${message.text}</div>
+                    <div class="message-time">${message.time}</div>
+                `;
+                chatMessages.appendChild(messageElement);
+            });
+            
+            // التمرير لأسفل لعرض أحدث الرسائل
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // إرسال رسالة جديدة
+        function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (messageText === '' || !currentConversationId) return;
+            
+            const conversation = allConversations.find(conv => conv.id === currentConversationId);
+            if (!conversation) return;
+            
+            const now = new Date();
+            const timeString = now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+            
+            // إنشاء الرسالة الجديدة
+            const newMessage = {
+                id: conversation.messages.length + 1,
+                text: messageText,
+                time: timeString,
+                type: 'sent'
+            };
+            
+            // إضافة الرسالة للمحادثة
+            conversation.messages.push(newMessage);
+            conversation.lastMessage = messageText;
+            conversation.lastMessageTime = timeString;
+            
+            // تحديث واجهة المستخدم
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message sent';
+            messageElement.innerHTML = `
+                <div class="message-text">${messageText}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            messageInput.value = '';
+            
+            // التمرير لأسفل لعرض الرسالة الجديدة
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // إعادة تحميل قائمة المحادثات لتحديث آخر رسالة
+            loadConversations();
+            
+            // محاكاة رد بعد ثانيتين
+            setTimeout(() => {
+                const replyMessages = [
+                    "شكراً على رسالتك. سنرد عليك قريباً",
+                    "تم استلام رسالتك وسنقوم بالرد في أقرب وقت",
+                    "نقدر تواصلك معنا. كيف يمكنني مساعدتك؟",
+                    "هل تحتاج إلى مساعدة إضافية؟"
+                ];
+                
+                const randomReply = replyMessages[Math.floor(Math.random() * replyMessages.length)];
+                
+                const replyMessage = {
+                    id: conversation.messages.length + 1,
+                    text: randomReply,
+                    time: timeString,
+                    type: 'received'
+                };
+                
+                conversation.messages.push(replyMessage);
+                conversation.lastMessage = randomReply;
+                conversation.lastMessageTime = timeString;
+                
+                const replyElement = document.createElement('div');
+                replyElement.className = 'message received';
+                replyElement.innerHTML = `
+                    <div class="message-text">${randomReply}</div>
+                    <div class="message-time">${timeString}</div>
+                `;
+                
+                chatMessages.appendChild(replyElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // إعادة تحميل قائمة المحادثات
+                loadConversations();
+            }, 2000);
+        }
+
+        // البحث في المحادثات
+        function searchConversationsHandler() {
+            const searchTerm = searchConversations.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                allConversations = [...conversationsData.all];
+            } else {
+                allConversations = conversationsData.all.filter(conversation => 
+                    conversation.userName.toLowerCase().includes(searchTerm) ||
+                    conversation.lastMessage.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            loadConversations();
+        }
+
+        // إضافة مستمعي الأحداث
+        function addEventListeners() {
+            // تبديل الشريط الجانبي
+            toggleSidebar.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+                mainContent.classList.toggle('expanded');
+            });
+
+            // فلتر المحادثات
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentFilter = button.getAttribute('data-filter');
+                    loadConversations();
+                });
+            });
+
+            // البحث في المحادثات
+            searchConversations.addEventListener('input', searchConversationsHandler);
+
+            // إرسال رسالة
+            sendMessageBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<?php
+session_start();
+require_once 'config.php';
+
+// دالة تسجيل نشاط المستخدم
+function logUserActivity($pdo, $user_id, $activity_type, $activity_details, $status = 'success') {
+    try {
+        // الحصول على معلومات الجهاز والمتصفح
+        $ip_address = $_SERVER['REMOTE_ADDR'];
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+        
+        // تحديد نوع الجهاز
+        $device_type = 'desktop'; // افتراضي
+        if (preg_match('/mobile/i', $user_agent)) {
+            $device_type = 'mobile';
+        } elseif (preg_match('/tablet|ipad/i', $user_agent)) {
+            $device_type = 'tablet';
+        }
+        
+        // استخراج معلومات المتصفح
+        $browser_info = 'Unknown';
+        if (preg_match('/(chrome|firefox|safari|edge|opera)[\/\s](\d+\.\d+)/i', $user_agent, $matches)) {
+            $browser_info = ucfirst($matches[1]) . ' ' . $matches[2];
+        }
+        
+        // إدخال سجل النشاط
+        $stmt = $pdo->prepare("INSERT INTO user_activities 
+            (user_id, activity_type, activity_details, ip_address, device_type, browser_info, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)");
+        
+        return $stmt->execute([
+            $user_id,
+            $activity_type,
+            $activity_details,
+            $ip_address,
+            $device_type,
+            $browser_info,
+            $status
+        ]);
+        
+    } catch (PDOException $e) {
+        // يمكنك تسجيل الخطأ في ملف log بدلاً من عرضه
+        error_log("Failed to log activity: " . $e->getMessage());
+        return false;
+    }
+}
+
+// إذا كان هناك محاولة تسجيل دخول
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+    
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND email_verified = 1");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user && password_verify($password, $user['password'])) {
+            // تحديث آخر نشاط في جدول المستخدمين
+            $update_stmt = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = ?");
+            $update_stmt->execute([$user['id']]);
+            
+            // تسجيل نشاط تسجيل الدخول الناجح
+            logUserActivity($pdo, $user['id'], 'login', 'تسجيل دخول ناجح إلى النظام', 'success');
+            
+            // تسجيل بيانات الجلسة
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_type'] = $user['user_type'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['login_time'] = time();
+            $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'];
+            
+            // التحقق من حالة المستخدم
+            if ($user['status'] != 'active') {
+                // تسجيل محاولة دخول لحساب غير نشط
+                logUserActivity($pdo, $user['id'], 'login', 'محاولة دخول لحساب غير نشط', 'failed');
+                $error = "حسابك غير نشط. يرجى التواصل مع الإدارة.";
+            } else {
+                // توجيه المستخدم حسب نوعه
+                if ($user['user_type'] == 'admin') {
+                    header('Location: admin_dashboard.php');
+                } else {
+                    header('Location: user_dashboard.php');
+                }
+                exit();
+            }
+            
+        } else {
+            // تسجيل محاولة دخول فاشلة
+            if ($user) {
+                // مستخدم موجود ولكن كلمة المرور خاطئة
+                logUserActivity($pdo, $user['id'], 'login', 'كلمة مرور غير صحيحة', 'failed');
+            } else {
+                // بريد إلكتروني غير موجود
+                logUserActivity($pdo, 0, 'login', "محاولة دخول ببريد غير موجود: {$email}", 'failed');
+            }
+            
+            $error = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+        }
+        
+    } catch (PDOException $e) {
+        // تسجيل خطأ النظام
+        logUserActivity($pdo, 0, 'system_error', "خطأ في نظام تسجيل الدخول: " . $e->getMessage(), 'failed');
+        $error = "حدث خطأ في النظام: " . $e->getMessage();
+    }
+}
+?>
+
+
+// في ملف add_product.php
+session_start();
+require_once 'config.php';
+require_once 'functions.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $product_name = $_POST['product_name'];
+    $price = $_POST['price'];
+    $category = $_POST['category'];
+    
+    $sql = "INSERT INTO products (name, price, category) VALUES (?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sdi", $product_name, $price, $category);
+    
+    if ($stmt->execute()) {
+        $product_id = $conn->insert_id;
+        
+        // تسجيل نشاط الإضافة
+        logUserActivity(
+            $_SESSION['user_id'], 
+            'add', 
+            "إضافة منتج جديد: {$product_name} بسعر {$price}",
+            'success'
+        );
+        
+        echo "تم إضافة المنتج بنجاح";
+    }
+}
+
+
+// في ملف edit_product.php
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $product_id = $_POST['id'];
+    $old_product = getProductById($product_id); // دالة لجلب البيانات القديمة
+    
+    // تنفيذ التعديل
+    $sql = "UPDATE products SET name = ?, price = ? WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sdi", $new_name, $new_price, $product_id);
+    
+    if ($stmt->execute()) {
+        // تسجيل نشاط التعديل
+        $details = "تعديل المنتج #{$product_id}: ";
+        $details .= "الاسم من '{$old_product['name']}' إلى '{$new_name}', ";
+        $details .= "السعر من {$old_product['price']} إلى {$new_price}";
+        
+        logUserActivity($_SESSION['user_id'], 'edit', $details, 'success');
+    }
+}
+
+
+// عند نشر مقال
+if (publishArticle($article_id)) {
+    logUserActivity($user_id, 'add', "نشر مقال جديد: {$article_title}", 'success');
+}
+
+
+// ملف ActivityLogger.php
+class ActivityLogger {
+    private $conn;
+    private $user_id;
+    
+    public function __construct($connection) {
+        $this->conn = $connection;
+        $this->user_id = $_SESSION['user_id'] ?? 0;
+    }
+    
+    public function log($activity_type, $details = '') {
+        $sql = "INSERT INTO user_activities 
+                (user_id, activity_type, activity_details, ip_address, device_type, browser_info) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $this->conn->prepare($sql);
+        
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $device = $this->detectDevice();
+        $browser = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+        
+        $stmt->bind_param("isssss", 
+            $this->user_id, 
+            $activity_type, 
+            $details, 
+            $ip, 
+            $device, 
+            $browser
+        );
+        
+        return $stmt->execute();
+    }
+    
+    private function detectDevice() {
+        // كود كشف الجهاز
+        return 'desktop'; // مثال
+    }
+}
+
+// الاستخدام في الملفات الأخرى
+$logger = new ActivityLogger($conn);
+$logger->log('view', 'عرض صفحة المنتجات');
+
+
+// عند إنشاء فاتورة
+if (createInvoice($data)) {
+    logUserActivity($user_id, 'add', "إنشاء فاتورة #{$invoice_number}", 'success');
+}
+
+
+// عند تعديل صلاحيات مستخدم
+if (updateUserPermissions($target_user_id, $permissions)) {
+    $user_name = getUserName($target_user_id);
+    logUserActivity($admin_id, 'edit', "تعديل صلاحيات المستخدم: {$user_name}", 'success');
+}
