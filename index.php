@@ -1,10 +1,17 @@
 <?php
-// session_start();
+require_once 'config.php';
 
-// // تحويل جميع المستخدمين مباشرة إلى home.php
-// // بغض النظر عن حالة تسجيل الدخول
-// header('Location: home.php');
-// exit();
+$site_name = get_setting('site_name', 'Be Pretty');
+$logo_text = get_setting('logo_text', 'BP');
+$background_image = get_setting('home_background', 'img/4.jpg');
+if (strpos($background_image, '/') === false && strpos($background_image, '.') !== false) {
+    // If it's just a file name, it might be in uploads/settings/
+    $background_image = 'uploads/settings/' . $background_image;
+}
+$site_logo = get_setting('site_logo', '');
+if ($site_logo && strpos($site_logo, '/') === false) {
+    $site_logo = 'uploads/settings/' . $site_logo;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -12,7 +19,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Be Pretty - مرحباً</title>
+    <title><?= htmlspecialchars($site_name) ?> - مرحباً</title>
     <style>
         body {
             display: flex;
@@ -24,7 +31,7 @@
             font-family: Arial, sans-serif;
             color: #333;
             /* New Background Styles */
-            background-image: url('img/4.jpg');
+            background-image: url('<?= htmlspecialchars($background_image) ?>');
             /* Replace with your image path */
             background-size: cover;
             background-position: center;
@@ -79,6 +86,7 @@
             align-items: center;
             margin-bottom: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
         .logo-text {
@@ -87,12 +95,19 @@
             color: #ff3366;
             margin: 0;
         }
+
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
         
         .store-name {
             font-size: 1.5rem;
             font-weight: bold;
             color: #fff;
             margin-top: 10px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
         }
         
         .bottom-bar {
@@ -128,9 +143,13 @@
 
     <div class="center-content">
         <div class="logo-circle">
-            <span class="logo-text">BP</span>
+            <?php if ($site_logo): ?>
+                <img src="<?= htmlspecialchars($site_logo) ?>" alt="Logo" class="logo-img">
+            <?php else: ?>
+                <span class="logo-text"><?= htmlspecialchars($logo_text) ?></span>
+            <?php endif; ?>
         </div>
-        <h1 class="store-name">Be Pretty</h1>
+        <h1 class="store-name"><?= htmlspecialchars($site_name) ?></h1>
     </div>
 
     <div class="bottom-bar">

@@ -1,16 +1,25 @@
     <!-- Footer -->
     <footer class="bg-dark text-light pt-5 pb-3">
+        <?php
+        $site_name = function_exists('get_setting') ? get_setting('site_name', 'Be Pretty') : 'Be Pretty';
+        $site_desc = function_exists('get_setting') ? get_setting('site_description', 'متجرك الأول لمستحضرات التجميل والعناية بالبشرة.') : 'متجرك الأول لمستحضرات التجميل والعناية بالبشرة.';
+        $snapchat = function_exists('get_setting') ? get_setting('social_snapchat', '#') : '#';
+        $tiktok = function_exists('get_setting') ? get_setting('social_tiktok', '#') : '#';
+        $instagram = function_exists('get_setting') ? get_setting('social_instagram', '#') : '#';
+        $twitter = function_exists('get_setting') ? get_setting('social_twitter', '#') : '#';
+        $copyright_year = function_exists('get_setting') ? get_setting('copyright_year', '2023') : '2023';
+        ?>
         <div class="container">
             <div class="row">
                 <!-- معلومات المتجر -->
                 <div class="col-md-4 mb-4">
-                    <h5>Be Pretty</h5>
-                    <p>متجرك الأول لمستحضرات التجميل والعناية بالبشرة.</p>
+                    <h5><?= htmlspecialchars($site_name) ?></h5>
+                    <p><?= htmlspecialchars($site_desc) ?></p>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-snapchat"></i></a>
-                        <a href="#"><i class="fab fa-tiktok"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="<?= htmlspecialchars($snapchat) ?>"><i class="fab fa-snapchat"></i></a>
+                        <a href="<?= htmlspecialchars($tiktok) ?>"><i class="fab fa-tiktok"></i></a>
+                        <a href="<?= htmlspecialchars($instagram) ?>"><i class="fab fa-instagram"></i></a>
+                        <a href="<?= htmlspecialchars($twitter) ?>"><i class="fab fa-twitter"></i></a>
                     </div>
                 </div>
                 
@@ -52,7 +61,7 @@
             <!-- حقوق النشر -->
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <p class="mb-0">&copy; 2023 Be Pretty. جميع الحقوق محفوظة.</p>
+                    <p class="mb-0">&copy; <?= htmlspecialchars($copyright_year) ?> <?= htmlspecialchars($site_name) ?>. جميع الحقوق محفوظة.</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <img src="https://via.placeholder.com/200x30?text=طرق+الدفع+المتاحة" alt="طرق الدفع" class="img-fluid">

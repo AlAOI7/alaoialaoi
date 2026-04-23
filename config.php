@@ -151,3 +151,17 @@ function logout_user() {
         session_destroy();
     }
 }
+// ÏÇáÉ áÌáÈ ÇáÅÚÏÇÏÇÊ ãä ÞÇÚÏÉ ÇáÈíÇäÇÊ
+function get_setting($key, $default = "") {
+    global $pdo;
+    if (!$pdo) return $default;
+    try {
+        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $result = $stmt->fetch();
+        return $result ? $result["setting_value"] : $default;
+    } catch (PDOException $e) {
+        return $default;
+    }
+}
+
