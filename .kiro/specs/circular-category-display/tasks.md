@@ -27,7 +27,7 @@
     - إضافة transition: all 0.3s ease
     - _المتطلبات: 4.1, 4.2, 4.3, 4.4_
 
-- [~] 2. تحديث عرض جميع الفئات (categories-section.php)
+- [ ] 2. تحديث عرض جميع الفئات (categories-section.php)
   - [x] 2.1 تطبيق الشكل الدائري على صور الفئات
     - تعديل .category-img: width و height إلى 120px
     - تطبيق border-radius: 50%

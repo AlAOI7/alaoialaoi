@@ -68,8 +68,12 @@ if (!$all_categories_result) {
             while($category = mysqli_fetch_assoc($all_categories_result)): 
                 $category_id = isset($category['id']) ? $category['id'] : 0;
                 $category_name = isset($category['name']) ? htmlspecialchars($category['name']) : 'غير معروف';
-                $category_image = isset($category['image']) && !empty($category['image']) && file_exists($category['image']) ? 
-                    $category['image'] : 'img/1.jpg';
+                // إصلاح مسار الصورة - إزالة ../ إذا كانت موجودة
+                $image_path = isset($category['image']) && !empty($category['image']) ? $category['image'] : '';
+                if ($image_path && strpos($image_path, '../') === 0) {
+                    $image_path = substr($image_path, 3); // إزالة ../
+                }
+                $category_image = !empty($image_path) && file_exists($image_path) ? $image_path : 'img/1.jpg';
                 $product_count = isset($category['product_count']) ? $category['product_count'] : 0;
                 $is_featured = isset($category['featured']) ? $category['featured'] : 0;
                 $category_description = isset($category['description']) ? htmlspecialchars(substr($category['description'], 0, 60)) : '';

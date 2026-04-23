@@ -10,7 +10,12 @@
         
         while($category = mysqli_fetch_assoc($featured_categories_result)): 
             // تحضير الصورة أو الأيقونة المناسبة
-            $category_image = !empty($category['image']) ? $category['image'] : '';
+            $image_path = !empty($category['image']) ? $category['image'] : '';
+            // إصلاح مسار الصورة - إزالة ../ إذا كانت موجودة
+            if ($image_path && strpos($image_path, '../') === 0) {
+                $image_path = substr($image_path, 3); // إزالة ../
+            }
+            $category_image = $image_path;
             $has_image = !empty($category_image) && file_exists($category_image);
             $default_image = 'img/1.jpg'; // الصورة الافتراضية
         ?>

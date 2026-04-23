@@ -363,6 +363,14 @@ $category_icons = [
             font-size: 1.8rem;
             transition: all 0.3s;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            overflow: hidden;
+        }
+        
+        .category-circle-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
         
         .category-circle:hover .circle-icon {
@@ -458,7 +466,18 @@ $category_icons = [
             <?php foreach ($categories as $cat): ?>
                 <div class="category-circle" data-category-id="<?php echo $cat['id']; ?>" onclick="filterCategory(<?php echo $cat['id']; ?>)">
                     <div class="circle-icon">
-                        <i class="fas <?php echo $category_icons['default']; ?>"></i>
+                        <?php 
+                        // إصلاح مسار الصورة - إزالة ../ إذا كانت موجودة
+                        $image_path = !empty($cat['image']) ? $cat['image'] : '';
+                        if ($image_path && strpos($image_path, '../') === 0) {
+                            $image_path = substr($image_path, 3); // إزالة ../
+                        }
+                        $category_image = !empty($image_path) && file_exists($image_path) ? $image_path : 'img/1.jpg';
+                        ?>
+                        <img src="<?php echo $category_image; ?>" 
+                             alt="<?php echo htmlspecialchars($cat['name']); ?>" 
+                             class="category-circle-img"
+                             onerror="this.onerror=null; this.src='img/1.jpg';">
                     </div>
                     <div class="circle-name"><?php echo htmlspecialchars($cat['name']); ?></div>
                     <div class="circle-count"><?php echo $cat['product_count']; ?></div>

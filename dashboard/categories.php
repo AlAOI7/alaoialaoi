@@ -9,118 +9,112 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 // إنشاء مجلد الصور إذا لم يكن موجوداً
-if (!file_exists('uploads')) {
-    mkdir('uploads', 0777, true);
+if (!file_exists('../uploads')) {
+    mkdir('../uploads', 0777, true);
 }
 
 // معالجة العمليات
 $message = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    /*==============================
-       إضافة فئة جديدة
-    ==============================*/
+    // إضافة فئة جديدة
     if (isset($_POST['add'])) {
-
         $name = $conn->real_escape_string($_POST['name']);
         $parent_id = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : "NULL";
 
-        // معالجة رفع الصورة
-        $image = NULL;
-        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-
-            if (in_array($_FILES['image']['type'], $allowed_types)) {
-
-                $image = 'uploads/' . time() . '_' . basename($_FILES['image']['name']);
-                move_uploaded_file($_FILES['image']['tmp_name'], $image);
-            }
-        }
-
-        // إذا لا توجد صورة → استخدم NULL
-        $image_value = $image ? "'$image'" : "NULL";
-
-        // تنفيذ الاستعلام
-        $sql = "INSERT INTO categories (name, parent_id, image) 
-                VALUES ('$name', $parent_id, $image_value)";
-
-        if ($conn->query($sql)) {
-            $message = "تم إضافة الفئة بنجاح!";
+        $check_name = $conn->query("SELECT id FROM categories WHERE name='$name'");
+        if ($check_name->num_rows > 0) {
+            $message = "⚠️ اسم الفئة موجود بالفعل!";
         } else {
-            $message = "خطأ في الإضافة: " . $conn->error;
-        }
-    }
-
-    /*==============================
-        تعديل فئة
-    ==============================*/ elseif (isset($_POST['update'])) {
-
-        $id = (int)$_POST['id'];
-        $name = $conn->real_escape_string($_POST['name']);
-        $parent_id = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : "NULL";
-
-        // تعديل الصورة
-        $image_sql = "";
-        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-
-            if (in_array($_FILES['image']['type'], $allowed_types)) {
-
-                // حذف القديمة
-                $old_image = $conn->query("SELECT image FROM categories WHERE id=$id")->fetch_assoc()['image'];
-
-                if ($old_image && file_exists($old_image)) {
-                    unlink($old_image);
+            $image = NULL;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+                if (in_array($_FILES['image']['type'], $allowed_types)) {
+                    $image = '../uploads/' . time() . '_' . basename($_FILES['image']['name']);
+                    move_uploaded_file($_FILES['image']['tmp_name'], $image);
                 }
-
-                // رفع الجديدة
-                $image = 'uploads/' . time() . '_' . basename($_FILES['image']['name']);
-                move_uploaded_file($_FILES['image']['tmp_name'], $image);
-
-                $image_sql = ", image='$image'";
+            }
+            $image_value = $image ? "'$image'" : "NULL";
+            $sql = "INSERT INTO categories (name, parent_id, image) VALUES ('$name', $parent_id, $image_value)";
+            if ($conn->query($sql)) {
+                $message = "تم إضافة الفئة بنجاح!";
+            } else {
+                $message = "خطأ في الإضافة: " . $conn->error;
             }
         }
-
-        // تنفيذ التعديل
-        $sql = "UPDATE categories 
-                SET name='$name', parent_id=$parent_id $image_sql 
-                WHERE id=$id";
-
-        if ($conn->query($sql)) {
-            $message = "تم تعديل الفئة بنجاح!";
-        } else {
-            $message = "خطأ في التعديل: " . $conn->error;
-        }
+        // بعد الإضافة نعيد التوجيه لنفس الصفحة لتحديث الجدول
+        header("Location: {$_SERVER['PHP_SELF']}?page=$page");
+        exit();
     }
 
-    /*==============================
-        حذف فئة
-    ==============================*/ elseif (isset($_POST['delete'])) {
-
+    // تعديل فئة
+    elseif (isset($_POST['update'])) {
         $id = (int)$_POST['id'];
+        $name = $conn->real_escape_string($_POST['name']);
+        $parent_id = !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : "NULL";
 
-        // حذف الصورة
-        $image = $conn->query("SELECT image FROM categories WHERE id=$id")->fetch_assoc()['image'];
-        if ($image && file_exists($image)) {
-            unlink($image);
-        }
-
-        $sql = "DELETE FROM categories WHERE id=$id";
-
-        if ($conn->query($sql)) {
-            $message = "تم حذف الفئة بنجاح!";
+        $check_name = $conn->query("SELECT id FROM categories WHERE name='$name' AND id != $id");
+        if ($check_name->num_rows > 0) {
+            $message = "⚠️ اسم الفئة موجود بالفعل!";
         } else {
-            $message = "خطأ في الحذف: " . $conn->error;
+            $image_sql = "";
+            if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
+                if (in_array($_FILES['image']['type'], $allowed_types)) {
+                    $old_image = $conn->query("SELECT image FROM categories WHERE id=$id")->fetch_assoc()['image'];
+                    if ($old_image && file_exists($old_image)) unlink($old_image);
+                    $image = '../uploads/' . time() . '_' . basename($_FILES['image']['name']);
+                    move_uploaded_file($_FILES['image']['tmp_name'], $image);
+                    $image_sql = ", image='$image'";
+                }
+            }
+            $sql = "UPDATE categories SET name='$name', parent_id=$parent_id $image_sql WHERE id=$id";
+            if ($conn->query($sql)) {
+                $message = "تم تعديل الفئة بنجاح!";
+            } else {
+                $message = "خطأ في التعديل: " . $conn->error;
+            }
         }
+        header("Location: {$_SERVER['PHP_SELF']}?page=$page");
+        exit();
+    }
+
+    // حذف فئة
+    elseif (isset($_POST['delete']) && $_POST['delete'] == '1') {
+        $id = (int)$_POST['id'];
+        $check_subcategories = $conn->query("SELECT COUNT(*) as count FROM categories WHERE parent_id=$id");
+        $subcategories_count = $check_subcategories->fetch_assoc()['count'];
+        if ($subcategories_count > 0) {
+            $message = "⚠️ لا يمكن حذف هذه الفئة لأنها تحتوي على فئات فرعية!";
+        } else {
+            $image_result = $conn->query("SELECT image FROM categories WHERE id=$id");
+            if ($image_result && $image_result->num_rows > 0) {
+                $image = $image_result->fetch_assoc()['image'];
+                if ($image && file_exists($image)) unlink($image);
+            }
+            $sql = "DELETE FROM categories WHERE id=$id";
+            if ($conn->query($sql)) {
+                $message = "✅ تم حذف الفئة بنجاح!";
+            } else {
+                $message = "❌ خطأ في الحذف: " . $conn->error;
+            }
+        }
+        header("Location: {$_SERVER['PHP_SELF']}?page=$page");
+        exit();
     }
 }
 
-// جلب الفئات الرئيسية
-$parent_categories = $conn->query("SELECT * FROM categories WHERE parent_id IS NULL");
+// Pagination
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
 
-// جلب كل الفئات
+// إجمالي الفئات
+$total_result = $conn->query("SELECT COUNT(*) as total FROM categories");
+$total_rows = $total_result->fetch_assoc()['total'];
+$total_pages = ceil($total_rows / $limit);
+
+// جلب الفئات مع الصفحات
 $categories_result = $conn->query("
     SELECT c.*, p.name AS parent_name 
     FROM categories c
@@ -129,13 +123,20 @@ $categories_result = $conn->query("
         COALESCE(c.parent_id, c.id),
         c.parent_id IS NOT NULL,
         c.id
+    LIMIT $limit OFFSET $offset
 ");
-?>
 
+// إحصائيات الفئات
+$total_categories = $conn->query("SELECT COUNT(*) as total FROM categories")->fetch_assoc()['total'];
+$main_categories = $conn->query("SELECT COUNT(*) as total FROM categories WHERE parent_id IS NULL")->fetch_assoc()['total'];
+$sub_categories = $conn->query("SELECT COUNT(*) as total FROM categories WHERE parent_id IS NOT NULL")->fetch_assoc()['total'];
+
+// جلب الفئات الرئيسية للقوائم المنسدلة
+$parent_categories = $conn->query("SELECT * FROM categories WHERE parent_id IS NULL");
+?>
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -143,6 +144,7 @@ $categories_result = $conn->query("
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ========== التصميم الأصلي (نفس ما كان موجوداً، مع إضافة كلاسات لنافذة الإضافة) ========== */
         :root {
             --primary: #6C63FF;
             --primary-light: #8A84FF;
@@ -177,14 +179,12 @@ $categories_result = $conn->query("
             overflow-x: hidden;
         }
 
-        /* التصميم الرئيسي */
         .dashboard {
             display: flex;
             min-height: 100vh;
             position: relative;
         }
 
-        /* المحتوى الرئيسي */
         .main-content {
             flex: 1;
             display: flex;
@@ -194,617 +194,6 @@ $categories_result = $conn->query("
             min-height: 100vh;
         }
 
-        .main-content.expanded {
-            margin-right: 0;
-        }
-
-        /* محتوى الصفحة */
-        .page-content {
-            flex: 1;
-            padding: 20px;
-        }
-
-        .page-title {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .page-title h2 {
-            font-size: 24px;
-            color: var(--dark);
-            font-weight: 700;
-        }
-
-        .page-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 45px 12px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: var(--radius);
-            background-color: white;
-            font-size: 14px;
-            transition: var(--transition);
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border-radius: var(--radius);
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
-        }
-
-        .btn-secondary {
-            background-color: white;
-            color: var(--dark);
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--light);
-            border-color: var(--primary);
-        }
-
-        .stats-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-left: 15px;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-info {
-            flex: 1;
-        }
-
-        .stat-info h3 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            font-weight: 700;
-        }
-
-        .stat-info p {
-            color: var(--gray);
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
-        .card-1 .stat-icon {
-            background: linear-gradient(135deg, #6C63FF, #8A84FF);
-            color: white;
-        }
-
-        .card-2 .stat-icon {
-            background: linear-gradient(135deg, #FF6584, #FF9A76);
-            color: white;
-        }
-
-        .card-3 .stat-icon {
-            background: linear-gradient(135deg, #36D1DC, #4ECDC4);
-            color: white;
-        }
-
-        /* عرض الفئات */
-        .categories-container {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            margin-bottom: 25px;
-        }
-
-        .categories-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .categories-header h3 {
-            font-size: 18px;
-            color: var(--dark);
-        }
-
-        .category-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .category-card {
-            background: var(--light);
-            border-radius: var(--radius);
-            padding: 15px;
-            transition: var(--transition);
-            border: 1px solid #e2e8f0;
-        }
-
-        .category-card.main-category {
-            background: white;
-            border-left: 4px solid var(--primary);
-        }
-
-        .category-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .category-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .category-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            background-color: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray);
-        }
-
-        .category-details h4 {
-            font-size: 16px;
-            margin-bottom: 5px;
-            color: var(--dark);
-        }
-
-        .category-details p {
-            font-size: 13px;
-            color: var(--gray);
-            margin-bottom: 5px;
-        }
-
-        .category-meta {
-            display: flex;
-            gap: 10px;
-            margin-top: 5px;
-        }
-
-        .category-id {
-            font-size: 12px;
-            color: var(--gray);
-            background-color: #f1f5f9;
-            padding: 3px 8px;
-            border-radius: 4px;
-        }
-
-        .category-date {
-            font-size: 12px;
-            color: var(--gray);
-        }
-
-        .category-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            width: 35px;
-            height: 35px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: white;
-            border: 1px solid #e2e8f0;
-            color: var(--gray);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            background-color: var(--light);
-        }
-
-        .action-btn.edit:hover {
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .action-btn.delete:hover {
-            color: var(--secondary);
-            border-color: var(--secondary);
-        }
-
-        .action-btn.add-sub:hover {
-            color: var(--success);
-            border-color: var(--success);
-        }
-
-        .subcategories {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #e2e8f0;
-            display: none;
-        }
-
-        .subcategories.show {
-            display: block;
-        }
-
-        .subcategory-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .subcategory-card {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .subcategory-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .subcategory-image {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            background-color: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray);
-            font-size: 12px;
-        }
-
-        .subcategory-details h5 {
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-
-        .subcategory-details p {
-            font-size: 12px;
-            color: var(--gray);
-        }
-
-        .toggle-subcategories {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        /* النوافذ المنبثقة - الإصلاح النهائي */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            padding: 20px;
-            backdrop-filter: blur(3px);
-        }
-
-        .modal-overlay.active {
-            display: flex;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal {
-            background-color: white;
-            border-radius: var(--radius);
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            transform: translateY(-20px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            max-height: 85vh;
-            overflow-y: auto;
-            position: relative;
-            z-index: 10000;
-        }
-
-        .modal-overlay.active .modal {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-header h3 {
-            font-size: 18px;
-            color: var(--dark);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 18px;
-            color: var(--gray);
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: var(--transition);
-        }
-
-        .close-modal:hover {
-            background-color: var(--light);
-            color: var(--dark);
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--dark);
-            font-size: 14px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: var(--radius);
-            font-size: 14px;
-            transition: var(--transition);
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: var(--radius);
-            font-size: 14px;
-            background-color: white;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
-        }
-
-        .modal-footer {
-            padding: 20px;
-            border-top: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--gray);
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #e2e8f0;
-        }
-
-        /* تحسينات للاستجابة على الأجهزة المحمولة */
-        @media (max-width: 768px) {
-            .stats-cards {
-                grid-template-columns: 1fr;
-            }
-
-            .page-content {
-                padding: 15px;
-            }
-
-            .page-actions {
-                flex-direction: column;
-            }
-
-            .search-box {
-                min-width: 100%;
-            }
-
-            .action-buttons {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .btn {
-                flex: 1;
-                justify-content: center;
-            }
-
-            .category-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .category-actions {
-                align-self: flex-end;
-            }
-
-            .modal-overlay {
-                padding: 10px;
-                align-items: flex-end;
-            }
-
-            .modal {
-                max-height: 90vh;
-                border-radius: var(--radius) var(--radius) 0 0;
-            }
-
-            .modal-overlay.active .modal {
-                transform: translateY(0);
-            }
-        }
-
-        /* التأكد من أن السايدبار والهيدر لديهم z-index أقل */
-        header {
-            z-index: 100 !important;
-        }
-
-        .sidebar {
-            z-index: 100 !important;
-        }
-
-        .main-content {
-            z-index: 1 !important;
-        }
-    </style>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-
-        /* تصميم البنر */
         .banner {
             background: linear-gradient(135deg, #2c3e50 0%, #df4803ff 100%);
             color: white;
@@ -873,7 +262,6 @@ $categories_result = $conn->query("
             opacity: 0.8;
         }
 
-        /* بقية التصميمات */
         .container {
             max-width: 1200px;
             margin: 30px auto;
@@ -905,6 +293,7 @@ $categories_result = $conn->query("
             font-weight: 500;
             border-bottom: 3px solid transparent;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .nav-tabs a:hover,
@@ -918,6 +307,10 @@ $categories_result = $conn->query("
             padding: 30px;
         }
 
+        .hidden {
+            display: none;
+        }
+
         .message {
             padding: 15px;
             margin: 20px 0;
@@ -928,94 +321,75 @@ $categories_result = $conn->query("
             font-weight: 500;
         }
 
-        .form-section,
-        .categories-section {
-            margin: 25px 0;
-            padding: 25px;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            background: #f8f9fa;
-        }
-
-        .form-group {
+        .page-actions {
+            display: flex;
+            justify-content: flex-start;
             margin-bottom: 20px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-        }
-
-        button {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
-            color: white;
+        .btn {
             padding: 12px 25px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin: 5px;
             font-weight: 600;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        button:hover {
+        .btn-primary {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .btn-cancel {
+        .btn-secondary {
             background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
         }
 
         .btn-delete {
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-
-        th,
-        td {
+        .table-responsive-scroll {
+            max-height: 500px;
+            overflow-y: auto;
             border: 1px solid #dee2e6;
-            padding: 15px;
-            text-align: right;
+            border-radius: 10px;
         }
 
-        th {
+        .table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            font-weight: 600;
-            color: #495057;
+            z-index: 10;
+            padding: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td, .table th {
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
+            text-align: right;
+            vertical-align: middle;
         }
 
         .category-image {
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             object-fit: cover;
             border-radius: 50%;
             border: 2px solid #e9ecef;
@@ -1028,167 +402,245 @@ $categories_result = $conn->query("
 
         .sub-category {
             background-color: #f8f9fa;
-            padding-right: 40px !important;
         }
 
-        .actions {
-            white-space: nowrap;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
         }
 
-        .hidden {
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #007bff;
+            background: white;
+            transition: 0.2s;
+        }
+
+        .pagination a:hover {
+            background: #e9ecef;
+        }
+
+        .pagination .active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        /* ========== النوافذ المنبثقة العامة ========== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.6);
             display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            z-index: 10000;
+            display: block;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: var(--dark);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--gray);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ========== كلاسات خاصة بنافذة إضافة الفئة فقط ========== */
+        .add-category-modal .modal {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            border: 1px solid rgba(108, 99, 255, 0.2);
+        }
+
+        .add-category-modal .modal-header {
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .add-category-modal .modal-header h3 {
+            color: white;
+        }
+
+        .add-category-modal .modal-header .close-modal {
+            color: white;
+        }
+
+        .add-category-modal .modal-header .close-modal:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .add-category-modal .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 2px 10px rgba(108, 99, 255, 0.3);
+        }
+
+        .add-category-modal .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
         }
 
         @media (max-width: 768px) {
-            .container {
-                margin: 15px;
-                border-radius: 10px;
+            .main-content {
+                margin-right: 0;
             }
-
-            .banner h1 {
-                font-size: 2em;
-            }
-
-            .banner-stats {
-                gap: 15px;
-            }
-
-            .stat-item {
-                padding: 10px 15px;
-            }
-
-            .nav-tabs {
-                flex-direction: column;
-            }
-
-            .content-section {
-                padding: 20px;
+            .table-responsive-scroll {
+                max-height: 400px;
             }
         }
     </style>
 </head>
-
 <body>
-    <div class="dashboard">
-        <?php include 'sidebar.php'; ?>
-
-        <!-- المحتوى الرئيسي -->
-        <div class="main-content">
-             <?php include 'header.php'; ?>
-            <!-- البنر الإعلاني -->
-            <div class="banner">
-                <div class="banner-content">
-                    <h1>🛍️ نظام إدارة الفئات المتقدم</h1>
-                    <p>أدِر فئات متجرك بكل سهولة واحترافية</p>
-
-                    <div class="banner-stats">
-                        <?php
-                        // إحصائيات الفئات
-                        $total_categories = $conn->query("SELECT COUNT(*) as total FROM categories")->fetch_assoc()['total'];
-                        $main_categories = $conn->query("SELECT COUNT(*) as total FROM categories WHERE parent_id IS NULL")->fetch_assoc()['total'];
-                        $sub_categories = $conn->query("SELECT COUNT(*) as total FROM categories WHERE parent_id IS NOT NULL")->fetch_assoc()['total'];
-                        ?>
-
-                        <div class="stat-item">
-                            <span class="stat-number"><?= $total_categories ?></span>
-                            <span class="stat-label">إجمالي الفئات</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number"><?= $main_categories ?></span>
-                            <span class="stat-label">فئة رئيسية</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number"><?= $sub_categories ?></span>
-                            <span class="stat-label">فئة فرعية</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">🎯</span>
-                            <span class="stat-label">سهولة الإدارة</span>
-                        </div>
-                    </div>
+<div class="dashboard">
+    <?php include 'sidebar.php'; ?>
+    <div class="main-content">
+        <?php include 'header.php'; ?>
+        <div class="banner">
+            <div class="banner-content">
+                <h1>🛍️ نظام إدارة الفئات المتقدم</h1>
+                <p>أدِر فئات متجرك بكل سهولة واحترافية</p>
+                <div class="banner-stats">
+                    <div class="stat-item"><span class="stat-number"><?= $total_categories ?></span><span class="stat-label">إجمالي الفئات</span></div>
+                    <div class="stat-item"><span class="stat-number"><?= $main_categories ?></span><span class="stat-label">فئة رئيسية</span></div>
+                    <div class="stat-item"><span class="stat-number"><?= $sub_categories ?></span><span class="stat-label">فئة فرعية</span></div>
+                    <div class="stat-item"><span class="stat-number">🎯</span><span class="stat-label">سهولة الإدارة</span></div>
                 </div>
             </div>
+        </div>
 
-            <div class="container">
-                <!-- شريط التنقل -->
-                <ul class="nav-tabs">
-                    <li><a href="#categories" class="active" onclick="showSection('categories')">📁 إدارة الفئات</a></li>
-                    <li><a href="#stats" onclick="showSection('stats')">📊 الإحصائيات</a></li>
-                    <li><a href="#help" onclick="showSection('help')">❓ المساعدة</a></li>
-                </ul>
+        <div class="container">
+            <ul class="nav-tabs">
+                <li><a onclick="showSection('categories')" class="active">📁 إدارة الفئات</a></li>
+                <li><a onclick="showSection('stats')">📊 الإحصائيات</a></li>
+                <li><a onclick="showSection('help')">❓ المساعدة</a></li>
+            </ul>
 
-                <!-- قسم إدارة الفئات -->
-                <div id="categories" class="content-section">
-                    <?php if ($message): ?>
-                        <div class="message">✅ <?= $message ?></div>
-                    <?php endif; ?>
+            <!-- قسم إدارة الفئات -->
+            <div id="categories" class="content-section">
+                <?php if ($message): ?>
+                    <div class="message">✅ <?= $message ?></div>
+                <?php endif; ?>
 
-                    <!-- نموذج إضافة/تعديل الفئات -->
-                    <div class="form-section">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;" id="form-title">
-                            <span id="form-icon">➕</span>
-                            <span id="form-text">إضافة فئة جديدة</span>
-                        </h3>
-                        <form method="POST" enctype="multipart/form-data" id="categoryForm">
-                            <input type="hidden" name="id" id="editId">
+                <!-- شريط الإجراءات مع زر إضافة فئة جديد -->
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="showAddModal()">
+                        <i class="fas fa-plus"></i> ➕ إضافة فئة جديدة
+                    </button>
+                </div>
 
-                            <div class="form-group">
-                                <label for="name">📝 اسم الفئة:</label>
-                                <input type="text" name="name" id="editName" required placeholder="أدخل اسم الفئة هنا...">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="parent_id">🏷️ الفئة الرئيسية:</label>
-                                <select name="parent_id" id="editParentId">
-                                    <option value="">-- اختر فئة رئيسية --</option>
-                                    <?php
-                                    $parent_categories = $conn->query("SELECT * FROM categories WHERE parent_id IS NULL");
-                                    while ($parent = $parent_categories->fetch_assoc()):
-                                    ?>
-                                        <option value="<?= $parent['id'] ?>"><?= $parent['name'] ?></option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="image">🖼️ صورة الفئة:</label>
-                                <input type="file" name="image" id="editImage" accept="image/*">
-                                <small style="color: #6c757d; display: block; margin-top: 5px;">
-                                    يُسمح بصور JPEG, PNG, GIF - الحد الأقصى 2MB
-                                </small>
-                                <div id="currentImage" style="margin-top: 10px;"></div>
-                            </div>
-
-                            <div style="margin-top: 25px;">
-                                <button type="submit" name="add" id="addBtn">➕ إضافة فئة</button>
-                                <button type="submit" name="update" id="updateBtn" class="hidden">✏️ تحديث الفئة</button>
-                                <button type="button" onclick="cancelEdit()" id="cancelBtn" class="hidden btn-cancel">❌ إلغاء</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- قائمة الفئات -->
-                    <div class="categories-section">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;">📋 قائمة الفئات</h3>
-                        <?php
-                        $categories_result = $conn->query("
-                            SELECT c.*, p.name as parent_name 
-                            FROM categories c 
-                            LEFT JOIN categories p ON c.parent_id = p.id 
-                            ORDER BY 
-                                COALESCE(c.parent_id, c.id),
-                                c.parent_id IS NOT NULL,
-                                c.id
-                        ");
-
-
-                        if ($categories_result->num_rows > 0): ?>
-                            <div style="overflow-x: auto; margin-top: 20px;">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>🖼️ الصورة</th>
+                <!-- قائمة الفئات -->
+                <div class="categories-section">
+                    <h3 style="color: #2c3e50; margin-bottom: 20px;">📋 قائمة الفئات</h3>
+                    <?php if ($categories_result->num_rows > 0): ?>
+                        <div class="table-responsive-scroll">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>🖼️ الصورة</th>
                                         <th>📝 الاسم</th>
                                         <th>📂 النوع</th>
                                         <th>📅 التاريخ</th>
@@ -1201,16 +653,14 @@ $categories_result = $conn->query("
                                             <td><strong><?= $category['id'] ?></strong></td>
                                             <td>
                                                 <?php if ($category['image']): ?>
-                                                    <img src="../<?= $category['image'] ?>" alt="<?= $category['name'] ?>" class="category-image">
+                                                    <img src="<?= $category['image'] ?>" alt="<?= $category['name'] ?>" class="category-image">
                                                 <?php else: ?>
-                                                    <div class="category-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+                                                    <div style="width:50px; height:50px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
                                                         <?= mb_substr($category['name'], 0, 1) ?>
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
-                                            <td>
-                                                <strong><?= htmlspecialchars($category['name']) ?></strong>
-                                            </td>
+                                            <td><strong><?= htmlspecialchars($category['name']) ?></strong></td>
                                             <td>
                                                 <?php if ($category['parent_id']): ?>
                                                     <span style="color: #28a745;">فرعية ← <?= htmlspecialchars($category['parent_name']) ?></span>
@@ -1220,130 +670,222 @@ $categories_result = $conn->query("
                                             </td>
                                             <td><?= date('Y-m-d', strtotime($category['created_at'])) ?></td>
                                             <td class="actions">
-                                                <button onclick="editCategory(
-                                            <?= $category['id'] ?>, 
-                                            '<?= htmlspecialchars($category['name']) ?>', 
-                                            <?= $category['parent_id'] ? $category['parent_id'] : 'null' ?>,
-                                            '<?= $category['image'] ?>'
-                                        )">✏️ تعديل</button>
-
-                                                <form method="POST" style="display:inline">
-                                                    <input type="hidden" name="id" value="<?= $category['id'] ?>">
-                                                    <button type="submit" name="delete" class="btn-delete"
-                                                        onclick="return confirm('⚠️ هل أنت متأكد من حذف الفئة؟ هذا الإجراء لا يمكن التراجع عنه.')">🗑️ حذف</button>
-                                                </form>
+                                                <button onclick='editCategory(<?= $category['id'] ?>, "<?= htmlspecialchars($category['name']) ?>", <?= $category['parent_id'] ? $category['parent_id'] : 'null' ?>, "<?= $category['image'] ?>")' class="btn-primary" style="padding:6px 12px;">✏️ تعديل</button>
+                                                <button onclick='showDeleteModal(<?= $category['id'] ?>, "<?= htmlspecialchars($category['name']) ?>")' class="btn-delete" style="padding:6px 12px;">🗑️ حذف</button>
                                             </td>
                                         </tr>
                                     <?php endwhile; ?>
                                 </tbody>
                             </table>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 40px; color: #6c757d;">
-                                <h3>📭 لا توجد فئات مضافة حالياً</h3>
-                                <p>ابدأ بإضافة أول فئة لك باستخدام النموذج أعلاه</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                        <!-- Pagination -->
+                        <div class="pagination">
+                            <?php if ($page > 1): ?>
+                                <a href="?page=<?= $page-1 ?>">&laquo; السابق</a>
+                            <?php endif; ?>
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <?php if ($i == $page): ?>
+                                    <span class="active"><?= $i ?></span>
+                                <?php else: ?>
+                                    <a href="?page=<?= $i ?>"><?= $i ?></a>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                            <?php if ($page < $total_pages): ?>
+                                <a href="?page=<?= $page+1 ?>">التالي &raquo;</a>
+                            <?php endif; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <h3>📭 لا توجد فئات مضافة حالياً</h3>
+                            <p>ابدأ بإضافة أول فئة لك باستخدام النافذة المنبثقة</p>
+                        </div>
+                    <?php endif; ?>
                 </div>
+            </div>
 
-                <!-- قسم الإحصائيات -->
-                <div id="stats" class="content-section hidden">
-                    <h3 style="color: #2c3e50; margin-bottom: 20px;">📊 إحصائيات النظام</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                        <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                            <h4 style="margin: 0 0 10px;">إجمالي الفئات</h4>
-                            <div style="font-size: 2.5em; font-weight: bold;"><?= $total_categories ?></div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #28a745, #1e7e34); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                            <h4 style="margin: 0 0 10px;">الفئات الرئيسية</h4>
-                            <div style="font-size: 2.5em; font-weight: bold;"><?= $main_categories ?></div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #ffc107, #e0a800); color: white; padding: 25px; border-radius: 10px; text-align: center;">
-                            <h4 style="margin: 0 0 10px;">الفئات الفرعية</h4>
-                            <div style="font-size: 2.5em; font-weight: bold;"><?= $sub_categories ?></div>
-                        </div>
+            <!-- قسم الإحصائيات -->
+            <div id="stats" class="content-section hidden">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">📊 إحصائيات النظام</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h4 style="margin: 0 0 10px;">إجمالي الفئات</h4>
+                        <div style="font-size: 2.5em; font-weight: bold;"><?= $total_categories ?></div>
                     </div>
-                </div>
-
-                <!-- قسم المساعدة -->
-                <div id="help" class="content-section hidden">
-                    <h3 style="color: #2c3e50; margin-bottom: 20px;">❓ دليل استخدام النظام</h3>
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-right: 4px solid #007bff;">
-                        <h4>🎯 كيفية استخدام النظام:</h4>
-                        <ul style="line-height: 2;">
-                            <li><strong>إضافة فئة جديدة:</strong> املأ النموذج واضغط على "إضافة فئة"</li>
-                            <li><strong>إنشاء فئة فرعية:</strong> اختر فئة رئيسية من القائمة المنسدلة</li>
-                            <li><strong>تعديل فئة:</strong> انقر على زر "تعديل" بجانب الفئة المطلوبة</li>
-                            <li><strong>حذف فئة:</strong> انقر على زر "حذف" مع التأكيد</li>
-                            <li><strong>رفع صورة:</strong> اختر صورة من جهازك لدعم الفئة بصرياً</li>
-                        </ul>
+                    <div style="background: linear-gradient(135deg, #28a745, #1e7e34); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h4 style="margin: 0 0 10px;">الفئات الرئيسية</h4>
+                        <div style="font-size: 2.5em; font-weight: bold;"><?= $main_categories ?></div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #ffc107, #e0a800); color: white; padding: 25px; border-radius: 10px; text-align: center;">
+                        <h4 style="margin: 0 0 10px;">الفئات الفرعية</h4>
+                        <div style="font-size: 2.5em; font-weight: bold;"><?= $sub_categories ?></div>
                     </div>
                 </div>
             </div>
+
+            <!-- قسم المساعدة -->
+            <div id="help" class="content-section hidden">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">❓ دليل استخدام النظام</h3>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-right: 4px solid #007bff;">
+                    <h4>🎯 كيفية استخدام النظام:</h4>
+                    <ul style="line-height: 2;">
+                        <li><strong>إضافة فئة جديدة:</strong> انقر على زر "إضافة فئة جديدة" في أعلى الجدول.</li>
+                        <li><strong>إنشاء فئة فرعية:</strong> اختر فئة رئيسية من القائمة المنسدلة داخل نافذة الإضافة.</li>
+                        <li><strong>تعديل فئة:</strong> انقر على زر "تعديل" بجانب الفئة المطلوبة.</li>
+                        <li><strong>حذف فئة:</strong> انقر على زر "حذف" ثم تأكيد الحذف.</li>
+                        <li><strong>رفع صورة:</strong> اختر صورة من جهازك لدعم الفئة بصرياً.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <script>
-            function editCategory(id, name, parentId, image) {
-                document.getElementById('form-title').innerHTML = '✏️ <span id="form-text">تعديل الفئة</span>';
-                document.getElementById('editId').value = id;
-                document.getElementById('editName').value = name;
-                document.getElementById('editParentId').value = parentId || '';
+    </div>
+</div>
 
-                // إظهار الصورة الحالية إذا كانت موجودة
-                const currentImageDiv = document.getElementById('currentImage');
-                if (image) {
-                    currentImageDiv.innerHTML = `
-            <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #e9ecef;">
-                <p style="margin: 0 0 10px; font-weight: bold;">🖼️ الصورة الحالية:</p>
-                <img src="${image}" alt="Current" style="max-width: 150px; border-radius: 8px; border: 2px solid #007bff;">
-            </div>`;
-                } else {
-                    currentImageDiv.innerHTML = '';
-                }
+<!-- ========== نافذة إضافة الفئة المنبثقة (بتنسيق خاص) ========== -->
+<div id="addCategoryModal" class="modal-overlay add-category-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>➕ إضافة فئة جديدة</h3>
+            <button class="close-modal" onclick="closeModal('addCategoryModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" enctype="multipart/form-data" action="">
+                <div class="form-group">
+                    <label>📝 اسم الفئة</label>
+                    <input type="text" name="name" class="form-control" required placeholder="أدخل اسم الفئة...">
+                </div>
+                <div class="form-group">
+                    <label>📂 الفئة الأساسية</label>
+                    <select name="parent_id" class="form-select">
+                        <option value="">-- فئة رئيسية --</option>
+                        <?php
+                        $parent_categories_add = $conn->query("SELECT * FROM categories WHERE parent_id IS NULL");
+                        while ($parent = $parent_categories_add->fetch_assoc()):
+                        ?>
+                            <option value="<?= $parent['id'] ?>"><?= htmlspecialchars($parent['name']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🖼️ صورة الفئة (اختياري)</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <small style="color: #6c757d;"> JPEG, PNG, GIF</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal('addCategoryModal')">إلغاء</button>
+                    <button type="submit" name="add" class="btn-primary">➕ إضافة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                // تبديل الأزرار
-                document.getElementById('addBtn').classList.add('hidden');
-                document.getElementById('updateBtn').classList.remove('hidden');
-                document.getElementById('cancelBtn').classList.remove('hidden');
+<!-- نافذة تعديل الفئة -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>✏️ تعديل الفئة</h3>
+            <button class="close-modal" onclick="closeModal('editModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" enctype="multipart/form-data" action="">
+                <input type="hidden" name="id" id="edit_id">
+                <div class="form-group">
+                    <label>📝 اسم الفئة</label>
+                    <input type="text" name="name" id="edit_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>📂 الفئة الأساسية</label>
+                    <select name="parent_id" id="edit_parent_id" class="form-select">
+                        <option value="">فئة رئيسية</option>
+                        <?php
+                        $parent_categories_edit = $conn->query("SELECT * FROM categories WHERE parent_id IS NULL");
+                        while ($parent = $parent_categories_edit->fetch_assoc()):
+                        ?>
+                            <option value="<?= $parent['id'] ?>"><?= htmlspecialchars($parent['name']) ?></option>
+                        <?php endwhile; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🖼️ صورة الفئة (اختياري)</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editModal')">إلغاء</button>
+                    <button type="submit" name="update" class="btn-primary">💾 حفظ التعديل</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                // التمرير للنموذج
-                document.querySelector('.form-section').scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
+<!-- نافذة تأكيد الحذف -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🗑️ تأكيد الحذف</h3>
+            <button class="close-modal" onclick="closeModal('deleteModal')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 48px; color: #dc3545; margin-bottom: 15px;">⚠️</div>
+                <h4>هل أنت متأكد من حذف الفئة؟</h4>
+                <p style="color: #6c757d; margin: 15px 0;">سيتم حذف الفئة "<strong id="deleteName"></strong>" نهائياً</p>
+                <p style="color: #dc3545; font-size: 14px;">هذا الإجراء لا يمكن التراجع عنه!</p>
+            </div>
+            <form method="POST" action="">
+                <input type="hidden" name="id" id="deleteId">
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal('deleteModal')">إلغاء</button>
+                    <button type="submit" name="delete" value="1" class="btn-delete">🗑️ حذف نهائياً</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-            function cancelEdit() {
-                document.getElementById('form-title').innerHTML = '➕ <span id="form-text">إضافة فئة جديدة</span>';
-                document.getElementById('categoryForm').reset();
-                document.getElementById('currentImage').innerHTML = '';
+<script>
+    function showSection(sectionId) {
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.add('hidden');
+        });
+        document.getElementById(sectionId).classList.remove('hidden');
+        document.querySelectorAll('.nav-tabs a').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
 
-                // تبديل الأزرار
-                document.getElementById('addBtn').classList.remove('hidden');
-                document.getElementById('updateBtn').classList.add('hidden');
-                document.getElementById('cancelBtn').classList.add('hidden');
-            }
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
 
-            function showSection(sectionId) {
-                // إخفاء جميع الأقسام
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.classList.add('hidden');
-                });
+    function showAddModal() {
+        document.getElementById('addCategoryModal').classList.add('active');
+    }
 
-                // إظهار القسم المطلوب
-                document.getElementById(sectionId).classList.remove('hidden');
+    function showDeleteModal(id, name) {
+        document.getElementById('deleteId').value = id;
+        document.getElementById('deleteName').innerText = name;
+        document.getElementById('deleteModal').classList.add('active');
+    }
 
-                // تحديث التبويبات النشطة
-                document.querySelectorAll('.nav-tabs a').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                event.target.classList.add('active');
-            }
+    function editCategory(id, name, parent_id, image) {
+        document.getElementById('edit_id').value = id;
+        document.getElementById('edit_name').value = name;
+        document.getElementById('edit_parent_id').value = parent_id || '';
+        document.getElementById('editModal').classList.add('active');
+    }
 
-            // التأكد من إظهار قسم الفئات عند التحميل
-            document.addEventListener('DOMContentLoaded', function() {
-                showSection('categories');
-            });
-        </script>
+    // إغلاق المودال عند النقر خارجها
+    window.onclick = function(e) {
+        if (e.target.classList.contains('modal-overlay')) {
+            e.target.classList.remove('active');
+        }
+    }
 
+    document.addEventListener('DOMContentLoaded', function() {
+        showSection('categories');
+    });
+</script>
 </body>
-
 </html>
