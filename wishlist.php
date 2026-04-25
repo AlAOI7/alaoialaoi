@@ -84,15 +84,22 @@ if (isset($_GET['add_to_cart'])) {
     exit();
 }
 
+// جلب شعار الموقع للصور الافتراضية
+$site_logo_fallback = function_exists('getSettings') ? (getSettings()['site_logo'] ?? 'img/1.jpg') : 'img/1.jpg';
+if (strpos($site_logo_fallback, '../') === 0) $site_logo_fallback = substr($site_logo_fallback, 3);
+if (!file_exists($site_logo_fallback)) $site_logo_fallback = 'img/1.jpg';
+
 // جلب المنتجات المفضلة للمستخدم مع تفاصيل المنتجات
 $sql = "SELECT 
             w.id as wishlist_id,
             w.created_at as added_date,
             p.*,
             c.name as category_name,
-            b.name as brand_name
+            b.name as brand_name,
+            pi.image_path
         FROM wishlist w
         INNER JOIN products p ON w.product_id = p.id
+        LEFT JOIN (SELECT product_id, image_path FROM product_images WHERE is_main = 1 GROUP BY product_id) pi ON p.id = pi.product_id
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
         WHERE w.user_id = ?
@@ -132,6 +139,9 @@ $stats = $stats_result->fetch_assoc();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
     
     <style>
         :root {
@@ -445,7 +455,7 @@ $stats = $stats_result->fetch_assoc();
                                 </button>
                             </form>
                             
-                            <a href="products.php" class="btn btn-primary btn-sm ms-2">
+                            <a href="product.php" class="btn btn-primary btn-sm ms-2">
                                 <i class="fas fa-plus me-1"></i>إضافة منتجات جديدة
                             </a>
                         <?php endif; ?>
@@ -463,7 +473,7 @@ $stats = $stats_result->fetch_assoc();
                             <i class="fas fa-heart-broken"></i>
                             <h4 class="text-muted mb-3">قائمة المفضلة فارغة</h4>
                             <p class="text-muted mb-4">لم تقم بإضافة أي منتجات إلى المفضلة بعد</p>
-                            <a href="products.php" class="btn btn-primary">
+                            <a href="product.php" class="btn btn-primary">
                                 <i class="fas fa-shopping-bag me-1"></i>تصفح المنتجات
                             </a>
                         </div>
@@ -475,15 +485,10 @@ $stats = $stats_result->fetch_assoc();
                         <div class="card product-card h-100">
                             <div class="position-relative">
                                 <!-- صورة المنتج -->
-                                <?php if (!empty($item['image'])): ?>
-                                    <img src="<?php echo htmlspecialchars($item['image']); ?>" 
-                                         class="card-img-top product-image" 
-                                         alt="<?php echo htmlspecialchars($item['name']); ?>">
-                                <?php else: ?>
-                                    <div class="product-image bg-light d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-image fa-3x text-muted"></i>
-                                    </div>
-                                <?php endif; ?>
+                                <img src="<?php echo !empty($item['image_path']) && file_exists($item['image_path']) ? htmlspecialchars($item['image_path']) : $site_logo_fallback; ?>" 
+                                     class="card-img-top product-image" 
+                                     alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                     onerror="this.src='<?php echo $site_logo_fallback; ?>'">
                                 
                                 <!-- بطاقة الخصم -->
                                 <?php if ($item['discount'] > 0): ?>
@@ -555,7 +560,7 @@ $stats = $stats_result->fetch_assoc();
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <small class="text-muted">
                                         <i class="fas fa-box me-1"></i>
-                                        <?php echo $item['stock'] > 0 ? 'متوفر (' . $item['stock'] . ')' : 'غير متوفر'; ?>
+                                        <?php echo $item['quantity'] > 0 ? 'متوفر (' . $item['quantity'] . ')' : 'غير متوفر'; ?>
                                     </small>
                                     
                                     <small class="added-date">
@@ -572,7 +577,7 @@ $stats = $stats_result->fetch_assoc();
                                         <i class="fas fa-trash me-1"></i>إزالة
                                     </a>
                                     
-                                    <?php if ($item['stock'] > 0 && $item['status'] == 'active'): ?>
+                                    <?php if ($item['quantity'] > 0 && $item['status'] == 'active'): ?>
                                         <a href="?add_to_cart=true&product_id=<?php echo $item['id']; ?>" 
                                            class="btn btn-add-to-cart action-btn">
                                             <i class="fas fa-shopping-cart me-1"></i>أضف للسلة
@@ -603,17 +608,18 @@ $stats = $stats_result->fetch_assoc();
                         <div class="card-body">
                             <?php
                             // جلب فئات المنتجات المفضلة
-                            $category_ids = array_column($wishlist_items, 'category_id');
+                            $category_ids = array_filter(array_column($wishlist_items, 'category_id'));
                             $category_ids_str = implode(',', array_unique($category_ids));
                             
                             if (!empty($category_ids_str)) {
-                                $suggestions_sql = "SELECT p.* FROM products p 
+                                $suggestions_sql = "SELECT p.*, pi.image_path as image FROM products p 
+                                                  LEFT JOIN (SELECT product_id, image_path FROM product_images WHERE is_main = 1 GROUP BY product_id) pi ON p.id = pi.product_id
                                                   WHERE p.category_id IN ($category_ids_str) 
                                                   AND p.id NOT IN (
                                                       SELECT product_id FROM wishlist WHERE user_id = ?
                                                   )
                                                   AND p.status = 'active' 
-                                                  AND p.stock > 0
+                                                  AND p.quantity > 0
                                                   ORDER BY RAND() LIMIT 4";
                                 
                                 $suggestions_stmt = $conn->prepare($suggestions_sql);
@@ -695,9 +701,11 @@ $stats = $stats_result->fetch_assoc();
         }
         
         // تحديث الصفحة كل 30 ثانية لعرض التحديثات
-        setTimeout(() => {
-            window.location.reload();
-        }, 30000);
+        // setTimeout(() => {
+        //     window.location.reload();
+        // }, 30000);
     </script>
+    
+    <?php include 'footer.php'; ?>
 </body>
 </html>

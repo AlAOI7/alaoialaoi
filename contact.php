@@ -120,19 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $contact_settings['contact_page_title'] ?? 'تواصل معنا - Be Pretty'; ?></title>
-    
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+<?php require_once 'header.php'; ?>
     <style>
         :root {
             --primary: #e83e8c;
@@ -313,30 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                 height: 50px;
                 font-size: 20px;
             }
-        }
-    </style>
-</head>
-<body>
-
-<!-- الهيدر العلوي -->
-<div class="header py-2">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <a href="home.php" class="btn btn-light btn-sm rounded-circle">
-                <i class="fas fa-arrow-right"></i>
-            </a>
-            
-            <h5 class="mb-0 fw-bold text-dark">
-                <i class="fas fa-headset text-primary me-2"></i>
-                <?php echo $contact_settings['contact_page_title'] ?? 'تواصل معنا'; ?>
-            </h5>
-            
-            <a href="profile.php" class="btn btn-light btn-sm rounded-circle">
-                <i class="fas fa-user"></i>
-            </a>
-        </div>
-    </div>
-</div>
+</style>
 
 <!-- المحتوى الرئيسي -->
 <main class="container py-3">
@@ -634,44 +599,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     </div>
     <?php endif; ?>
 </main>
-
-<!-- التنقل السفلي -->
-<nav class="bottom-nav py-2">
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                <a href="home.php" class="nav-item">
-                    <i class="fas fa-home"></i>
-                    <span>الرئيسية</span>
-                </a>
-            </div>
-            <div class="col">
-                <a href="categories.php" class="nav-item">
-                    <i class="fas fa-th-large"></i>
-                    <span>الفئات</span>
-                </a>
-            </div>
-            <div class="col">
-                <a href="cart.php" class="nav-item">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>السلة</span>
-                </a>
-            </div>
-            <div class="col">
-                <a href="order.php" class="nav-item">
-                    <i class="fas fa-list-alt"></i>
-                    <span>الطلبات</span>
-                </a>
-            </div>
-            <div class="col">
-                <a href="profile.php" class="nav-item">
-                    <i class="fas fa-user"></i>
-                    <span>حسابي</span>
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
 
 <!-- JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

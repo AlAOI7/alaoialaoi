@@ -38,10 +38,39 @@
     </div>
 </div> -->
 
+<?php
+// جلب اسم الموقع وشعاره من قاعدة البيانات
+$_dash_settings = [];
+if (isset($conn)) {
+    $r = $conn->query("SELECT setting_key, setting_value FROM settings");
+    if ($r) while ($rw = $r->fetch_assoc()) $_dash_settings[$rw['setting_key']] = $rw['setting_value'];
+}
+$_dash_site_name = $_dash_settings['site_name'] ?? 'Be Pretty';
+$_dash_logo_raw  = $_dash_settings['site_logo'] ?? '';
+
+// ضبط مسار الشعار
+if (!empty($_dash_logo_raw) && strpos($_dash_logo_raw, '/') === false && strpos($_dash_logo_raw, '\\') === false) {
+    $_dash_logo = '../uploads/settings/' . $_dash_logo_raw;
+} else {
+    $_dash_logo = $_dash_logo_raw;
+}
+if (strpos($_dash_logo, '../') === 0 && !file_exists($_dash_logo)) {
+    // إذا تم حفظه بمسار مطلق من site_settings
+    $_check = str_replace('../', '', $_dash_logo);
+    if (file_exists('../' . $_check)) $_dash_logo = '../' . $_check;
+}
+if (empty($_dash_logo) || (!file_exists($_dash_logo) && strpos($_dash_logo, 'http') !== 0)) {
+    $_dash_logo = '../img/1.jpg';
+}
+?>
+
       <!-- الشريط الجانبي -->
 <div class="sidebar" id="sidebar">
     <div class="logo">
-        <h1>متجرك الإلكتروني</h1>
+        <img src="<?= htmlspecialchars($_dash_logo) ?>" alt="<?= htmlspecialchars($_dash_site_name) ?>" 
+             style="max-height:60px; max-width:120px; object-fit:contain; border-radius:8px; margin-bottom:8px;"
+             onerror="this.style.display='none'">
+        <h1 style="font-size:1.1rem; margin:0;"><?= htmlspecialchars($_dash_site_name) ?></h1>
         <p>لوحة تحكم الإدارة</p>
     </div>
 
@@ -177,6 +206,14 @@
         <a href="settings.php" class="menu-item">
             <i class="fas fa-cog"></i>
             <span>الإعدادات</span>
+        </a>
+        <a href="site_settings.php" class="menu-item">
+            <i class="fas fa-sliders-h"></i>
+            <span>إعدادات الموقع</span>
+        </a>
+        <a href="currencies.php" class="menu-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>العملات وأسعار الصرف</span>
         </a>
 
     </div>

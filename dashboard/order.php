@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // جلب البيانات
 $orders = getOrders($filters);
 ?>
-   <?php include 'header.php'; ?>
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -49,20 +49,90 @@ $orders = getOrders($filters);
     <title>نظام إدارة الطلبات</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8A84FF;
+            --primary-dark: #524BC2;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --radius: 12px;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2f8 100%);
+            direction: rtl;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-right: var(--sidebar-width);
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+        .banner {
+            background: linear-gradient(135deg, #2c3e50 0%, #df4803ff 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .banner h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 0;
+        }
+        .banner p {
+            margin: 10px 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                margin-right: 0;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="dashboard">
             
       <?php include 'sidebar.php'; ?>
 
         <!-- المحتوى الرئيسي -->
         <div class="main-content">
-            <div class="page-content">
-                <div class="page-title">
-                    <h2>إدارة الطلبات</h2>
-                    <div class="date"><?php echo date('Y-m-d'); ?></div>
+            <?php include 'header.php'; ?>
+
+            <div class="banner">
+                <div class="banner-content">
+                    <h1>📦 إدارة الطلبات</h1>
+                    <p>متابعة وتحديث حالة الطلبات بكل سهولة</p>
                 </div>
+            </div>
+
+            <div class="dashboard-container">
 
                 <!-- شريط البحث والإجراءات -->
                 <form method="POST" id="filterForm">

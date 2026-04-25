@@ -33,15 +33,35 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
     }
 }
 ?>
+<?php
+$site_name = function_exists('get_setting') ? get_setting('site_name', 'Be Pretty') : 'Be Pretty';
+$site_logo_raw = function_exists('get_setting') ? get_setting('site_logo', 'img/1.jpg') : 'img/1.jpg';
+$site_logo = $site_logo_raw;
+// Handle different save formats between settings and site_settings
+if (!empty($site_logo) && strpos($site_logo, '/') === false && strpos($site_logo, '\\') === false) {
+    $site_logo = 'uploads/settings/' . $site_logo;
+}
+// Remove ../ if saved by site_settings incorrectly
+if (strpos($site_logo, '../') === 0) {
+    $site_logo = substr($site_logo, 3);
+}
+// Fallback if file doesn't exist
+if (!file_exists($site_logo) && strpos($site_logo, 'http') !== 0) {
+    $site_logo = 'img/1.jpg';
+}
+?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Be Pretty - متجر التجميل والعناية</title>
+    <title><?= htmlspecialchars($site_name) ?> - متجر التجميل والعناية</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
             
            /* أنماط الهيدر المعدلة */
@@ -618,14 +638,21 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
                 <!-- الشعار وشريط البحث معاً -->
                 <div class="search-with-logo">
                     <div class="logo-container">
-                        <img src="img/1.jpg" alt="Be Pretty Logo" class="logo" 
+                        <img src="<?= htmlspecialchars($site_logo) ?>" alt="<?= htmlspecialchars($site_name) ?> Logo" class="logo" 
                             title="انقر للتكبير">
                     </div>
                     
-                    <!-- <div class="search-bar-container">
-                        <input type="text" placeholder="البحث عن منتج..." class="search-input">
-                        <i class="fas fa-search search-icon"></i>
-                    </div> -->
+                    <div class="search-bar-container">
+                        <form action="#" method="GET" class="d-flex w-100" id="smart-search-form" onsubmit="return false;">
+                            <input type="text" name="q" id="smart-search-input" placeholder="البحث عن منتج، فئة..." class="search-input" autocomplete="off">
+                            <button type="button" class="btn btn-link search-icon border-0 p-0" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #667eea; z-index: 10;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                        <!-- Smart Search Dropdown -->
+                        <div id="smart-search-results" class="position-absolute w-100 bg-white rounded shadow-sm" style="top: 100%; left: 0; z-index: 1000; display: none; max-height: 400px; overflow-y: auto;">
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -635,13 +662,45 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
             <?php if ($isLoggedIn && $user): ?>
             <?php if (($user['user_type'] ?? 'user') == 'user'): ?>
             <!-- أزرار خاصة بالمستخدم العادي -->
-            <!-- زر الإشعارات (معلق حالياً) -->
-            <!-- <button class="icon-btn" data-bs-toggle="modal" data-bs-target="#notificationModal">
+            <!-- زر الإشعارات -->
+            <a href="notifications.php" class="icon-btn" title="الإشعارات">
                 <i class="fas fa-bell"></i>
-                <span class="notification-badge" id="notification-count">0</span>
-            </button> -->
+                <span class="notification-badge" id="notification-count">
+                    <?php 
+                    $notif_count = 0;
+                    if (isset($_SESSION['user_id'])) {
+                        try {
+                            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = 0");
+                            $stmt->execute([$_SESSION['user_id']]);
+                            $notif_count = $stmt->fetch(PDO::FETCH_ASSOC)['count'] ?? 0;
+                        } catch (PDOException $e) {}
+                    }
+                    echo $notif_count > 0 ? $notif_count : '';
+                    ?>
+                </span>
+            </a>
             
-            <!-- زر المفضلة -->
+                <!-- زر العملات -->
+                <div class="dropdown" style="display:inline-block;">
+                    <button class="icon-btn" data-bs-toggle="dropdown" title="العملة">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </button>
+                    <ul class="dropdown-menu shadow border-0" style="min-width:120px;">
+                        <?php
+                        if(isset($pdo)) {
+                            try {
+                                $currStmt = $pdo->query("SELECT * FROM currencies WHERE status='active'");
+                                while($curr = $currStmt->fetch(PDO::FETCH_ASSOC)) {
+                                    $active = (isset($_SESSION['currency']) && $_SESSION['currency'] == $curr['code']) || (!isset($_SESSION['currency']) && $curr['is_default'] == 1) ? 'active' : '';
+                                    echo "<li><a class='dropdown-item {$active}' href='ajax/set_currency.php?code={$curr['code']}'>{$curr['symbol']} {$curr['code']}</a></li>";
+                                }
+                            } catch (PDOException $e) {}
+                        }
+                        ?>
+                    </ul>
+                </div>
+            
+                <!-- زر المفضلة -->
             
                 <button class="icon-btn" data-bs-toggle="modal" data-bs-target="#favoritesModal" title="المفضلة">
                     <i class="fas fa-heart"></i>
@@ -942,7 +1001,16 @@ if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
                 });
                 $(document).ready(function() {
                     // Dropdown functionality
-                
+                    $('#user-dropdown-toggle').click(function(e) {
+                        e.stopPropagation();
+                        $('#user-dropdown-menu').toggleClass('show');
+                    });
+                    
+                    $(document).click(function(e) {
+                        if (!$(e.target).closest('.user-dropdown').length) {
+                            $('#user-dropdown-menu').removeClass('show');
+                        }
+                    });
                     
                     // Logo expansion effect
                     const logo = $('.logo');

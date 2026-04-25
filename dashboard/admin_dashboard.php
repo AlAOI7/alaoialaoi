@@ -27,9 +27,170 @@ if ($_SESSION['user_type'] !== 'admin') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم المتجر الإلكتروني</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8A84FF;
+            --primary-dark: #524BC2;
+            --sidebar-width: 280px;
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2f8 100%);
+            direction: rtl;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-right: var(--sidebar-width);
+            transition: var(--transition);
+            min-height: 100vh;
+        }
+
+        .banner {
+            background: linear-gradient(135deg, #2c3e50 0%, #df4803ff 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .banner h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .banner p {
+            margin: 10px 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 15px;
+            font-size: 24px;
+        }
+
+        .card-1 .stat-icon { background: linear-gradient(135deg, #6C63FF, #8A84FF); color: white; }
+        .card-2 .stat-icon { background: linear-gradient(135deg, #FF6584, #FF9A76); color: white; }
+        .card-3 .stat-icon { background: linear-gradient(135deg, #36D1DC, #4ECDC4); color: white; }
+        .card-4 .stat-icon { background: linear-gradient(135deg, #6A89CC, #82CCDD); color: white; }
+
+        .stat-info h3 {
+            font-size: 24px;
+            margin: 0 0 5px;
+            font-weight: 700;
+        }
+
+        .stat-info p {
+            margin: 0 0 5px;
+            color: #718096;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .recent-orders {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-right: 0;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- زر القائمة للشاشات الصغيرة -->
@@ -48,11 +209,14 @@ if ($_SESSION['user_type'] !== 'admin') {
 
 
             <!-- محتوى الصفحة -->
-            <div class="page-content">
-                <div class="page-title">
-                    <h2>نظرة عامة</h2>
-                    <div class="date">الأحد، 15 أكتوبر 2023</div>
+            <div class="banner">
+                <div class="banner-content">
+                    <h1>📊 لوحة التحكم</h1>
+                    <p>نظرة عامة على أداء المتجر</p>
                 </div>
+            </div>
+
+            <div class="container">
 
                 <div class="stats-cards">
                     <div class="stat-card card-1">
@@ -109,7 +273,7 @@ if ($_SESSION['user_type'] !== 'admin') {
                     </div>
                 </div>
 
-                <!-- الشريط الجانبي -->
+                </div>
 
                 <div class="charts-section">
                     <div class="chart-card">

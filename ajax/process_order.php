@@ -59,6 +59,32 @@ try {
         throw new Exception('الرجاء ملء جميع الحقول المطلوبة (الاسم، الهاتف، المدينة)');
     }
     
+    // حفظ أو تحديث العنوان للمستخدم المسجل
+    if ($user_id > 0) {
+        // تحديث الاسم والهاتف في جدول users إذا لزم الأمر
+        $update_user = $conn->prepare("UPDATE users SET full_name = ?, phone = ? WHERE id = ? AND (full_name IS NULL OR phone IS NULL)");
+        $update_user->bind_param("ssi", $full_name, $phone, $user_id);
+        $update_user->execute();
+
+        // التحقق من وجود عنوان للمستخدم
+        $check_addr = $conn->prepare("SELECT id FROM delivery_addresses WHERE user_id = ? AND is_default = 1");
+        $check_addr->bind_param("i", $user_id);
+        $check_addr->execute();
+        $addr_res = $check_addr->get_result();
+
+        if ($addr_res->num_rows > 0) {
+            // تحديث العنوان الحالي
+            $update_addr = $conn->prepare("UPDATE delivery_addresses SET city = ?, district = ?, street = ? WHERE user_id = ? AND is_default = 1");
+            $update_addr->bind_param("sssi", $city, $district, $street, $user_id);
+            $update_addr->execute();
+        } else {
+            // إضافة عنوان جديد وافتراضي
+            $insert_addr = $conn->prepare("INSERT INTO delivery_addresses (user_id, city, district, street, is_default) VALUES (?, ?, ?, ?, 1)");
+            $insert_addr->bind_param("isss", $user_id, $city, $district, $street);
+            $insert_addr->execute();
+        }
+    }
+    
     // 4. حساب المجاميع
     $subtotal = 0;
     foreach ($cart_items as $item) {

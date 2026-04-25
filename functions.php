@@ -1,18 +1,56 @@
 <?php
 // functions.php - دالة إنشاء بطاقة المنتج مع جميع الميزات
 
-// function generateProductCard($product) {
-//     // التأكد من وجود جميع البيانات المطلوبة
-//     $productId = $product['id'] ?? 0;
-//     $productName = $product['name'] ?? 'منتج غير معروف';
-//     $categoryId = $product['category_id'] ?? 0;
-//     $categoryName = $product['category_name'] ?? 'فئة غير معروفة';
-//     $sellingPrice = $product['selling_price'] ?? 0;
-//     $oldPrice = $product['old_price'] ?? null;
-//     $rating = $product['rating'] ?? 0;
-//     $stock = $product['stock'] ?? 0;
-//     $description = $product['description'] ?? '';
-//     $isFeatured = $product['featured'] ?? 0;
+/**
+ * جلب إعدادات الموقع من قاعدة البيانات مرة واحدة (cached)
+ */
+function getSettings() {
+    global $conn;
+    static $settings = null;
+
+    if ($settings !== null) {
+        return $settings;
+    }
+
+    $settings = [
+        'site_name'        => 'Be Pretty',
+        'site_logo'        => 'img/logo.png',
+        'footer_text'      => 'جميع الحقوق محفوظة © Be Pretty',
+        'contact_phone'    => '+966500000000',
+        'contact_email'    => 'info@bepretty.com',
+        'whatsapp'         => '966500000000',
+        'address'          => 'المملكة العربية السعودية',
+        'facebook'         => '#',
+        'instagram'        => '#',
+        'twitter'          => '#',
+        'snapchat'         => '#',
+        'tiktok'           => '#',
+        'shipping_cost'    => '15',
+        'free_shipping_min'=> '200',
+        'background_image' => '',
+        'currency'         => 'SAR',
+        'about_text'       => '',
+    ];
+
+    if (!isset($conn) || !$conn) {
+        return $settings;
+    }
+
+    try {
+        $result = $conn->query("SELECT setting_key, setting_value FROM settings");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $settings[$row['setting_key']] = $row['setting_value'];
+            }
+        }
+    } catch (Exception $e) {
+        // استخدام القيم الافتراضية
+    }
+
+    return $settings;
+}
+
+
 //     $isNew = $product['new_product'] ?? 1;
     
 //     // جلب صورة المنتج الرئيسية
@@ -178,13 +216,39 @@
 //     return $cardHTML;
 // }
 function generateProductCard($product) {
+    global $conn;
+    
+    // جلب معلومات العملة الحالية
+    $currency_code = $_SESSION['currency'] ?? 'SAR';
+    $currency_symbol = 'ر.س';
+    $exchange_rate = 1.0;
+    
+    if (isset($conn)) {
+        $curr_query = "SELECT symbol, exchange_rate FROM currencies WHERE code = ? AND status = 'active'";
+        if ($stmt = mysqli_prepare($conn, $curr_query)) {
+            mysqli_stmt_bind_param($stmt, "s", $currency_code);
+            mysqli_stmt_execute($stmt);
+            $curr_res = mysqli_stmt_get_result($stmt);
+            if ($curr_row = mysqli_fetch_assoc($curr_res)) {
+                $currency_symbol = $curr_row['symbol'];
+                $exchange_rate = $curr_row['exchange_rate'];
+            }
+        }
+    }
+
     // التأكد من وجود جميع البيانات المطلوبة
     $productId = $product['id'] ?? 0;
     $productName = $product['name'] ?? 'منتج غير معروف';
     $categoryId = $product['category_id'] ?? 0;
     $categoryName = $product['category_name'] ?? 'فئة غير معروفة';
-    $sellingPrice = $product['selling_price'] ?? 0;
-    $oldPrice = $product['old_price'] ?? null;
+    
+    $basePrice = isset($product['selling_price']) ? floatval($product['selling_price']) : 0;
+    $baseOldPrice = isset($product['old_price']) ? floatval($product['old_price']) : 0;
+    
+    // تطبيق سعر الصرف
+    $sellingPrice = $basePrice * $exchange_rate;
+    $oldPrice = ($baseOldPrice > 0) ? $baseOldPrice * $exchange_rate : null;
+    
     $rating = $product['rating'] ?? 0;
     $stock = $product['stock'] ?? 0;
     $description = $product['description'] ?? '';
@@ -221,7 +285,7 @@ function generateProductCard($product) {
         $discountPercent = round((($oldPrice - $sellingPrice) / $oldPrice) * 100);
         $oldPriceHtml = '
             <small class="old-price">
-                <span class="text-muted text-decoration-line-through">' . number_format($oldPrice, 2) . ' ر.س</span>
+                <span class="text-muted text-decoration-line-through">' . number_format($oldPrice, 2) . ' ' . $currency_symbol . '</span>
                 <span class="discount-badge">-' . $discountPercent . '%</span>
             </small>';
     }
@@ -289,7 +353,7 @@ function generateProductCard($product) {
                 <div class="product-price">
                     <span class="current-price">
                         <span class="price-value">' . number_format($sellingPrice, 2) . '</span>
-                        <span class="currency">ر.س</span>
+                        <span class="currency">' . $currency_symbol . '</span>
                     </span>
                     ' . $oldPriceHtml . '
                 </div>
@@ -364,6 +428,17 @@ function generateProductCard($product) {
 }
 // دالة للتحقق من وجود المنتج في المفضلة
 function isProductInFavorites($productId) {
+    global $conn;
+    if (isset($_SESSION['user_id'])) {
+        $userId = $_SESSION['user_id'];
+        $checkSql = "SELECT id FROM favorites WHERE user_id = ? AND product_id = ?";
+        if ($stmt = mysqli_prepare($conn, $checkSql)) {
+            mysqli_stmt_bind_param($stmt, "ii", $userId, $productId);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            return mysqli_num_rows($result) > 0;
+        }
+    }
     if (!isset($_SESSION['favorites'])) {
         $_SESSION['favorites'] = [];
     }
@@ -400,15 +475,15 @@ function getRatingStars($rating) {
 function getProductImage($productId) {
     global $conn;
     
-    $defaultImage = 'img/products/default.jpg';
-    $fallbackImages = [
-        'img/1.jpg',
-        'img/products/2.jpg',
-        'img/products/3.jpg'
-    ];
+    $settings = getSettings();
+    $siteLogo = !empty($settings['site_logo']) ? $settings['site_logo'] : 'img/1.jpg';
+    // إزالة مسار ../ إن وجد
+    if (strpos($siteLogo, '../') === 0) {
+        $siteLogo = substr($siteLogo, 3);
+    }
     
     if (!$conn) {
-        return $fallbackImages[array_rand($fallbackImages)];
+        return file_exists($siteLogo) ? $siteLogo : 'img/1.jpg';
     }
     
     try {
@@ -438,14 +513,11 @@ function getProductImage($productId) {
         error_log("خطأ في جلب صورة المنتج: " . $e->getMessage());
     }
     
-    // محاولة استخدام الصور البديلة
-    foreach ($fallbackImages as $image) {
-        if (file_exists($image)) {
-            return $image;
-        }
+    if (file_exists($siteLogo)) {
+        return $siteLogo;
     }
     
-    return $defaultImage;
+    return 'img/1.jpg';
 }
 
 // دالة مساعدة لعرض السعر بشكل أنيق

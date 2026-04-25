@@ -46,9 +46,14 @@ while ($image = mysqli_fetch_assoc($imagesResult)) {
     $productImages[] = $image['image_path'];
 }
 
-// إذا لم يكن هناك صور، استخدم الصورة الافتراضية
-if (empty($productImages)) {
-    $productImages[] = 'img/default-product.jpg';
+// جلب شعار الموقع للصور الافتراضية
+$site_logo_fallback = function_exists('getSettings') ? (getSettings()['site_logo'] ?? 'img/1.jpg') : 'img/1.jpg';
+if (strpos($site_logo_fallback, '../') === 0) $site_logo_fallback = substr($site_logo_fallback, 3);
+if (!file_exists($site_logo_fallback)) $site_logo_fallback = 'img/1.jpg';
+
+// إذا لم يكن هناك صور، استخدم شعار الموقع
+if (empty($productImages) || !file_exists($productImages[0])) {
+    $productImages = [$site_logo_fallback];
 }
 
 // جلب الألوان المتاحة
@@ -84,7 +89,7 @@ $cartCount = $cartRow['count'] ?? 0;
 
 // التحقق مما إذا كان المنتج في المفضلة
 $isFavorite = false;
-$wishlistQuery = "SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?";
+$wishlistQuery = "SELECT id FROM favorites WHERE user_id = ? AND product_id = ?";
 $stmt = mysqli_prepare($conn, $wishlistQuery);
 mysqli_stmt_bind_param($stmt, 'si', $userId, $productId);
 mysqli_stmt_execute($stmt);
@@ -611,7 +616,8 @@ $reviewsResult = mysqli_stmt_get_result($stmt);
                 <div class="mb-3">
                     <img id="product-main-image" src="<?= htmlspecialchars($productImages[0]) ?>" 
                          class="product-detail-img" 
-                         alt="<?= htmlspecialchars($product['name']) ?>">
+                         alt="<?= htmlspecialchars($product['name']) ?>"
+                         onerror="this.src='<?= $site_logo_fallback ?>'">
                 </div>
                 <?php if(count($productImages) > 1): ?>
                 <div class="d-flex gap-2 flex-wrap">
@@ -619,6 +625,7 @@ $reviewsResult = mysqli_stmt_get_result($stmt);
                         <img src="<?= htmlspecialchars($image) ?>" 
                              class="thumbnail-img <?= $index == 0 ? 'active' : '' ?>" 
                              alt="صورة <?= $index + 1 ?>"
+                             onerror="this.src='<?= $site_logo_fallback ?>'"
                              onclick="changeMainImage('<?= htmlspecialchars($image) ?>', this)">
                     <?php endforeach; ?>
                 </div>
@@ -633,7 +640,8 @@ $reviewsResult = mysqli_stmt_get_result($stmt);
                             <div class="carousel-item <?= $index == 0 ? 'active' : '' ?>">
                                 <img src="<?= htmlspecialchars($image) ?>" 
                                      class="d-block w-100 product-detail-img" 
-                                     alt="صورة <?= $index + 1 ?>">
+                                     alt="صورة <?= $index + 1 ?>"
+                                     onerror="this.src='<?= $site_logo_fallback ?>'">
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -886,30 +894,7 @@ $reviewsResult = mysqli_stmt_get_result($stmt);
             <div class="row g-3">
                 <?php while($relatedProduct = mysqli_fetch_assoc($relatedResult)): ?>
                     <div class="col-sm-6 col-md-4 col-lg-3">
-                        <a href="product-details.php?id=<?= $relatedProduct['id'] ?>" class="related-product-card">
-                            <img src="<?= htmlspecialchars($relatedProduct['main_image'] ?? 'img/default-product.jpg') ?>" 
-                                 class="related-product-img" 
-                                 alt="<?= htmlspecialchars($relatedProduct['name']) ?>">
-                            <div class="related-product-info">
-                                <?php if($relatedProduct['stock'] > 0): ?>
-                                    <span class="stock-badge"><?= $relatedProduct['stock'] > 10 ? 'متوفر' : 'بقي ' . $relatedProduct['stock'] . ' قطعة' ?></span>
-                                <?php else: ?>
-                                    <span class="out-of-stock-badge">غير متوفر</span>
-                                <?php endif; ?>
-                                <h6 class="fw-bold"><?= htmlspecialchars($relatedProduct['name']) ?></h6>
-                                <p class="text-danger fw-bold mb-1">
-                                    <?= number_format($relatedProduct['selling_price'], 2) ?> ر.س
-                                    <?php if($relatedProduct['old_price'] && $relatedProduct['old_price'] > $relatedProduct['selling_price']): ?>
-                                        <small class="text-muted text-decoration-line-through">
-                                            <?= number_format($relatedProduct['old_price'], 2) ?> ر.س
-                                        </small>
-                                    <?php endif; ?>
-                                </p>
-                                <div class="rating small">
-                                    <?= getRatingStars($relatedProduct['rating'] ?? 0) ?>
-                                </div>
-                            </div>
-                        </a>
+                        <?= generateProductCard($relatedProduct) ?>
                     </div>
                 <?php endwhile; ?>
             </div>

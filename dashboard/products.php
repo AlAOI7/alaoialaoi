@@ -45,6 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $new_product = isset($_POST['new_product']) ? 1 : 0;
         $status = trim($_POST['status']);
         
+        $price_sar = !empty($_POST['price_sar']) ? floatval($_POST['price_sar']) : NULL;
+        $price_usd = !empty($_POST['price_usd']) ? floatval($_POST['price_usd']) : NULL;
+        $price_yer_new = !empty($_POST['price_yer_new']) ? floatval($_POST['price_yer_new']) : NULL;
+        $price_yer_old = !empty($_POST['price_yer_old']) ? floatval($_POST['price_yer_old']) : NULL;
+        
         // حساب سعر البيع
         $tax_amount = $base_price * ($tax_rate / 100);
         $discount_amount = $base_price * ($discount / 100);
@@ -63,15 +68,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         // إضافة منتج جديد
         $sql = "INSERT INTO products (name, description, category_id, brand_id, base_price, old_price, selling_price, 
-                tax_rate, discount, currency_id, quantity, barcode, expiry_date, featured, popular, new_product, status) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                tax_rate, discount, currency_id, quantity, barcode, expiry_date, featured, popular, new_product, status,
+                price_sar, price_usd, price_yer_new, price_yer_old) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            $stmt->bind_param("ssiiddddddisssiii", 
+            $stmt->bind_param("ssiiddddddisssiiidddd", 
                 $name, $description, $category_id, $brand_id, $base_price, $old_price, 
                 $selling_price, $tax_rate, $discount, $currency_id, $quantity, $barcode, 
-                $expiry_date, $featured, $popular, $new_product, $status
+                $expiry_date, $featured, $popular, $new_product, $status,
+                $price_sar, $price_usd, $price_yer_new, $price_yer_old
             );
             
             if ($stmt->execute()) {
@@ -132,15 +139,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 featured = ?, 
                 popular = ?, 
                 new_product = ?, 
-                status = ? 
+                status = ?,
+                price_sar = ?,
+                price_usd = ?,
+                price_yer_new = ?,
+                price_yer_old = ?
                 WHERE id = ?";
         
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            $stmt->bind_param("ssiiddddddisssiiii", 
+            $stmt->bind_param("ssiiddddddisssiiiddddi", 
                 $name, $description, $category_id, $brand_id, $base_price, $old_price, 
                 $selling_price, $tax_rate, $discount, $currency_id, $quantity, $barcode, 
-                $expiry_date, $featured, $popular, $new_product, $status, $product_id
+                $expiry_date, $featured, $popular, $new_product, $status, 
+                $price_sar, $price_usd, $price_yer_new, $price_yer_old, $product_id
             );
             
             if ($stmt->execute()) {
@@ -460,114 +472,62 @@ $currencies_result->data_seek(0);
             .mobile-menu-btn {
                 display: flex !important;
             }
+            .main-content {
+                margin-right: 0;
+            }
+        }
+        
+        .banner {
+            background: linear-gradient(135deg, #2c3e50 0%, #df4803ff 100%);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .banner h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .banner p {
+            margin: 10px 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
     </style>
 </head>
 <body>
-    <!-- بديل في حالة عدم وجود ملفات header و sidebar -->
- 
-      <header style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;">
-        <h1 style="margin: 0; font-size: 1.5em;">نظام إدارة المنتجات</h1>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <span>مرحباً، <?= $_SESSION['admin_name'] ?? 'المسؤول' ?></span>
-            <a href="logout.php" style="color: white; text-decoration: none; background: #dc3545; padding: 8px 15px; border-radius: 5px;">تسجيل خروج</a>
-        </div>
-    </header>
-    <div class="container">
-        <div class="sidebar" id="sidebar">
-            <div style="padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <h3 style="margin: 0; color: white;">لوحة التحكم</h3>
-            </div>
-               <nav style="padding: 20px 0; background: #1a1a2e;">
-                    <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center;">
-                        <!-- لوحة التحكم -->
-                        <li><a href="admin_dashboard.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none; border-right: 3px solid #007bff; background: rgba(0,123,255,0.1);"><i class="fas fa-tachometer-alt" style="margin-left: 10px;"></i>لوحة التحكم</a></li>
-                        
-                        <!-- المنتجات -->
-                        <li><a href="products.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-box" style="margin-left: 10px;"></i>المنتجات</a></li>
-                        
-                        <!-- الفئات -->
-                        <li><a href="categories.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-list" style="margin-left: 10px;"></i>الفئات</a></li>
-                        
-                        <!-- الطلبات -->
-                        <li><a href="orders.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-shopping-cart" style="margin-left: 10px;"></i>الطلبات</a></li>
-                        
-                        <!-- الطلبات الجديدة -->
-                        <li><a href="orders_new.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-cart-plus" style="margin-left: 10px;"></i>طلبات جديدة</a></li>
-                        
-                        <!-- الطلبات المعالجة -->
-                        <li><a href="orders_processing.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-cogs" style="margin-left: 10px;"></i>طلبات معالجة</a></li>
-                        
-                        <!-- العملاء -->
-                        <li><a href="customers.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-users" style="margin-left: 10px;"></i>العملاء</a></li>
-                        
-                        <!-- العملاء الجدد -->
-                        <li><a href="new_customers.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-user-plus" style="margin-left: 10px;"></i>عملاء جدد</a></li>
-                        
-                        <!-- إضافة منتج -->
-                        <li><a href="add_product.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-plus-circle" style="margin-left: 10px;"></i>إضافة منتج</a></li>
-                        
-                        <!-- المشتريات -->
-                        <li><a href="purchases.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-shopping-bag" style="margin-left: 10px;"></i>المشتريات</a></li>
-                        
-                        <!-- المستخدمين -->
-                        <li><a href="users.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-user-cog" style="margin-left: 10px;"></i>المستخدمين</a></li>
-                        
-                        <!-- إضافة مستخدم -->
-                        <li><a href="adduser.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-user-plus" style="margin-left: 10px;"></i>إضافة مستخدم</a></li>
-                        
-                        <!-- المبيعات -->
-                        <li><a href="pos.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-cash-register" style="margin-left: 10px;"></i>المبيعات</a></li>
-                        
-                        <!-- الدردشة -->
-                        <li><a href="chat.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-comments" style="margin-left: 10px;"></i>الدردشة</a></li>
-                        
-                        <!-- المرتجعات -->
-                        <li><a href="returns.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-exchange-alt" style="margin-left: 10px;"></i>المرتجعات</a></li>
-                        
-                        <!-- البنك -->
-                        <li><a href="bank.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-university" style="margin-left: 10px;"></i>البنك</a></li>
-                        
-                        <!-- الموردين -->
-                        <li><a href="suppliers.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-truck" style="margin-left: 10px;"></i>الموردين</a></li>
-                        
-                        <!-- العملات -->
-                        <li><a href="currencies.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-money-bill-wave" style="margin-left: 10px;"></i>العملات</a></li>
-                        
-                        <!-- العلامات التجارية -->
-                        <li><a href="brand.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-tag" style="margin-left: 10px;"></i>العلامات التجارية</a></li>
-                        
-                        <!-- العروض -->
-                        <li><a href="offers.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-percentage" style="margin-left: 10px;"></i>العروض</a></li>
-                        
-                        <!-- المدونة -->
-                        <li><a href="blog.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-blog" style="margin-left: 10px;"></i>المدونة</a></li>
-                        
-                        <!-- الاستيراد والتصدير -->
-                        <li><a href="import_export.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-file-import" style="margin-left: 10px;"></i>استيراد وتصدير</a></li>
-                        
-                        <!-- الإعدادات -->
-                        <li><a href="settings.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-cog" style="margin-left: 10px;"></i>الإعدادات</a></li>
-                        
-                        <!-- طرق الدفع -->
-                        <li><a href="payment_methods.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-credit-card" style="margin-left: 10px;"></i>طرق الدفع</a></li>
-                        
-                        <!-- القسائم -->
-                        <li><a href="coupons.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none;"><i class="fas fa-ticket-alt" style="margin-left: 10px;"></i>القسائم</a></li>
-                        
-                        <!-- تسجيل الخروج -->
-                        <li><a href="logout.php" style="display: block; padding: 12px 20px; color: white; text-decoration: none; background: rgba(255,0,0,0.1);"><i class="fas fa-sign-out-alt" style="margin-left: 10px;"></i>تسجيل الخروج</a></li>
-                    </ul>
-                </nav>
-
-        </div>
-        
+    <div class="dashboard">
+        <?php include 'sidebar.php'; ?>
         <div class="main-content">
-            <div class="page-content">
-                <div class="page-title">
-                    <h2>إدارة المنتجات</h2>
-                    <div class="date"><?php echo date('l، j F Y'); ?></div>
+            <?php include 'header.php'; ?>
+            
+            <div class="banner">
+                <div class="banner-content">
+                    <h1>📦 إدارة المنتجات</h1>
+                    <p>أدِر منتجات متجرك بكل سهولة واحترافية</p>
                 </div>
+            </div>
+
+            <div class="dashboard-container">
 
                 <?php echo $message; ?>
 
@@ -914,6 +874,27 @@ $currencies_result->data_seek(0);
                         <div class="form-group">
                             <label for="discount">الخصم (%)</label>
                             <input type="number" class="form-control" id="discount" name="discount" placeholder="0" step="0.01" value="0" min="0" max="100" onchange="calculatePrices()" oninput="calculatePrices()">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="priceSar">السعر بالسعودي (SAR)</label>
+                            <input type="number" class="form-control" id="priceSar" name="price_sar" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="priceUsd">السعر بالدولار (USD)</label>
+                            <input type="number" class="form-control" id="priceUsd" name="price_usd" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="priceYerNew">السعر باليمني (جديد)</label>
+                            <input type="number" class="form-control" id="priceYerNew" name="price_yer_new" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="priceYerOld">السعر باليمني (قديم)</label>
+                            <input type="number" class="form-control" id="priceYerOld" name="price_yer_old" placeholder="0.00" step="0.01" min="0">
                         </div>
                     </div>
                     

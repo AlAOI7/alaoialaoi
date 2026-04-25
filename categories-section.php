@@ -73,7 +73,13 @@ if (!$all_categories_result) {
                 if ($image_path && strpos($image_path, '../') === 0) {
                     $image_path = substr($image_path, 3); // إزالة ../
                 }
-                $category_image = !empty($image_path) && file_exists($image_path) ? $image_path : 'img/1.jpg';
+                $settings = function_exists('getSettings') ? getSettings() : [];
+                $siteLogo = !empty($settings['site_logo']) ? $settings['site_logo'] : 'img/1.jpg';
+                if (strpos($siteLogo, '../') === 0) {
+                    $siteLogo = substr($siteLogo, 3);
+                }
+                
+                $category_image = !empty($image_path) && file_exists($image_path) ? $image_path : $siteLogo;
                 $product_count = isset($category['product_count']) ? $category['product_count'] : 0;
                 $is_featured = isset($category['featured']) ? $category['featured'] : 0;
                 $category_description = isset($category['description']) ? htmlspecialchars(substr($category['description'], 0, 60)) : '';
@@ -85,7 +91,7 @@ if (!$all_categories_result) {
                         <img src="<?php echo $category_image; ?>" 
                              alt="<?php echo $category_name; ?>" 
                              class="category-img"
-                             onerror="this.src='img/1.jpg'">
+                             onerror="this.src='<?php echo $siteLogo; ?>'">
                         <?php if($is_featured): ?>
                             <span class="featured-badge">
                                 <i class="fas fa-star"></i>
@@ -665,7 +671,7 @@ function loadCategoryProducts(categoryId, categoryName) {
                         <div class="col-md-3 col-6 mb-4">
                             <div class="product-card shadow-sm border-0 position-relative">
                                 <div class="product-img-container position-relative overflow-hidden">
-                                    <img src="${product.image}" class="product-img w-100" alt="${product.name}" onerror="this.src='img/1.jpg'">
+                                    <img src="${product.image}" class="product-img w-100" alt="${product.name}" onerror="this.src='<?php echo $siteLogo; ?>'">
                                     <div class="product-overlay-actions">
                                         <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="showProductDetails(${JSON.stringify(product).replace(/"/g, '&quot;')})" title="عرض سريع">
                                             <i class="fas fa-eye text-primary"></i>

@@ -56,12 +56,10 @@ while ($row = $items_result->fetch_assoc()) {
     $order_items[] = $row;
 }
    
-// جلب رقم الواتساب من جدول about (إذا وجد)
-$whatsapp = '966500000000'; // رقم افتراضي
-// $about_result = $conn->query("SELECT whatsapp FROM about WHERE id = 1");
-// if ($about_result && $about_result->num_rows > 0) {
-//     $whatsapp = $about_result->fetch_assoc()['whatsapp'];
-// }
+// جلب رقم الواتساب وإعدادات الموقع
+$site_settings = function_exists('getSettings') ? getSettings() : [];
+$whatsapp = preg_replace('/[^0-9]/', '', $site_settings['whatsapp'] ?? '966500000000');
+if (empty($whatsapp)) $whatsapp = '966500000000';
 
 // تنسيق رسالة الواتساب
 $invoice_url = "http://" . $_SERVER['HTTP_HOST'] . "/invoice.php?order_id=" . $order_id;

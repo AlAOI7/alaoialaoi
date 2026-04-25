@@ -1,994 +1,386 @@
-    <!-- Footer -->
-    <footer class="bg-dark text-light pt-5 pb-3">
-        <?php
-        $site_name = function_exists('get_setting') ? get_setting('site_name', 'Be Pretty') : 'Be Pretty';
-        $site_desc = function_exists('get_setting') ? get_setting('site_description', 'متجرك الأول لمستحضرات التجميل والعناية بالبشرة.') : 'متجرك الأول لمستحضرات التجميل والعناية بالبشرة.';
-        $snapchat = function_exists('get_setting') ? get_setting('social_snapchat', '#') : '#';
-        $tiktok = function_exists('get_setting') ? get_setting('social_tiktok', '#') : '#';
-        $instagram = function_exists('get_setting') ? get_setting('social_instagram', '#') : '#';
-        $twitter = function_exists('get_setting') ? get_setting('social_twitter', '#') : '#';
-        $copyright_year = function_exists('get_setting') ? get_setting('copyright_year', '2023') : '2023';
-        ?>
-        <div class="container">
-            <div class="row">
-                <!-- معلومات المتجر -->
-                <div class="col-md-4 mb-4">
-                    <h5><?= htmlspecialchars($site_name) ?></h5>
-                    <p><?= htmlspecialchars($site_desc) ?></p>
-                    <div class="social-links">
-                        <a href="<?= htmlspecialchars($snapchat) ?>"><i class="fab fa-snapchat"></i></a>
-                        <a href="<?= htmlspecialchars($tiktok) ?>"><i class="fab fa-tiktok"></i></a>
-                        <a href="<?= htmlspecialchars($instagram) ?>"><i class="fab fa-instagram"></i></a>
-                        <a href="<?= htmlspecialchars($twitter) ?>"><i class="fab fa-twitter"></i></a>
-                    </div>
-                </div>
-                
-                <!-- روابط سريعة -->
-                <div class="col-md-2 mb-4">
-                    <h6>روابط سريعة</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="about.php">من نحن</a></li>
-                        <li><a href="contact.php">اتصل بنا</a></li>
-                        <li><a href="terms.php">الشروط والأحكام</a></li>
-                        <li><a href="blog.php">المدونة</a></li>
-                    </ul>
-                </div>
-                
-                <!-- خدمة العملاء -->
-                <div class="col-md-3 mb-4">
-                    <h6>خدمة العملاء</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="shipping.php">الشحن والتوصيل</a></li>
-                        <li><a href="returns.php">سياسة الإرجاع</a></li>
-                        <li><a href="faq.php">الأسئلة الشائعة</a></li>
-                        <li><a href="support.php">الدعم الفني</a></li>
-                    </ul>
-                </div>
-                
-                <!-- الاشتراك في النشرة البريدية -->
-                <div class="col-md-3 mb-4">
-                    <h6>اشترك في نشرتنا البريدية</h6>
-                    <div class="input-group mb-2">
-                        <input type="email" class="form-control" placeholder="بريدك الإلكتروني">
-                        <button class="btn btn-danger" type="button">اشتراك</button>
-                    </div>
-                    <small>احصلي على آخر العروض والتخفيضات</small>
+<?php
+// جلب إعدادات الموقع
+if (!isset($site_settings)) {
+    $site_settings = function_exists('getSettings') ? getSettings() : [];
+}
+$site_name     = $site_settings['site_name']     ?? 'Be Pretty';
+$site_desc     = $site_settings['about_text']    ?? 'متجرك الأول لمستحضرات التجميل والعناية بالبشرة.';
+$snapchat      = $site_settings['snapchat']      ?? '';
+$tiktok        = $site_settings['tiktok']        ?? '';
+$instagram     = $site_settings['instagram']     ?? '';
+$twitter       = $site_settings['twitter']       ?? '';
+$facebook      = $site_settings['facebook']      ?? '';
+$contact_phone = $site_settings['contact_phone'] ?? '';
+$contact_email = $site_settings['contact_email'] ?? '';
+$site_address  = $site_settings['address']       ?? '';
+
+$current_page  = basename($_SERVER['PHP_SELF']);
+?>
+<style>
+    :root {
+        --pp-gradient: linear-gradient(135deg, #e83e8c 0%, #6f42c1 100%);
+        --pp-primary:  #e83e8c;
+    }
+
+    /* ========== FOOTER ========== */
+    .custom-footer {
+        background: linear-gradient(135deg, #1a1a3a 0%, #2c2c54 100%);
+        color: rgba(255,255,255,.85);
+        padding: 55px 0 40px;
+        margin-top: 70px;
+        position: relative;
+        overflow: hidden;
+        direction: rtl;
+        text-align: right;
+        font-family: 'Cairo', sans-serif;
+    }
+    .custom-footer::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 5px;
+        background: var(--pp-gradient);
+    }
+    .custom-footer::after {
+        content: '';
+        position: absolute;
+        bottom: -80px; left: -80px;
+        width: 250px; height: 250px;
+        background: rgba(232,62,140,.06);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .custom-footer h5,
+    .custom-footer h6 {
+        color: #fff;
+        margin-bottom: 22px;
+        font-weight: 700;
+        position: relative;
+        display: inline-block;
+    }
+    .custom-footer h5::after,
+    .custom-footer h6::after {
+        content: '';
+        position: absolute;
+        bottom: -8px; right: 0;
+        width: 35px; height: 3px;
+        background: var(--pp-gradient);
+        border-radius: 2px;
+    }
+    .custom-footer p {
+        color: rgba(255,255,255,.7);
+        line-height: 1.8;
+        font-size: .95rem;
+    }
+    .custom-footer ul {
+        padding: 0;
+        list-style: none;
+        margin: 0;
+    }
+    .custom-footer ul li {
+        margin-bottom: 12px;
+        color: rgba(255,255,255,.7);
+        font-size: .92rem;
+    }
+    .custom-footer ul li i {
+        color: var(--pp-primary);
+        width: 20px;
+    }
+    .custom-footer a {
+        color: rgba(255,255,255,.75);
+        text-decoration: none;
+        transition: all .3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .custom-footer a:hover {
+        color: #fff;
+        transform: translateX(-4px);
+    }
+    .footer-social {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+        flex-wrap: wrap;
+    }
+    .footer-social a {
+        width: 40px; height: 40px;
+        background: rgba(255,255,255,.1);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff;
+        transition: all .3s;
+        font-size: 1rem;
+    }
+    .footer-social a:hover {
+        background: var(--pp-gradient);
+        transform: translateY(-4px) rotate(8deg);
+        color: #fff;
+    }
+    .footer-newsletter .input-group {
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,.2);
+    }
+    .footer-newsletter .form-control {
+        background: rgba(255,255,255,.12);
+        border: none;
+        color: #fff;
+        padding: 12px 18px;
+        font-size: .92rem;
+    }
+    .footer-newsletter .form-control::placeholder { color: rgba(255,255,255,.5); }
+    .footer-newsletter .form-control:focus {
+        background: rgba(255,255,255,.18);
+        box-shadow: none;
+        color: #fff;
+    }
+    .footer-newsletter .btn-subscribe {
+        background: var(--pp-gradient);
+        color: #fff;
+        border: none;
+        padding: 12px 20px;
+        white-space: nowrap;
+        font-size: .9rem;
+        font-weight: 600;
+        transition: all .3s;
+    }
+    .footer-newsletter .btn-subscribe:hover {
+        opacity: .9;
+        transform: scale(1.02);
+    }
+    .footer-divider {
+        border-color: rgba(255,255,255,.12);
+        margin: 30px 0 20px;
+    }
+    .footer-copy {
+        color: rgba(255,255,255,.55);
+        font-size: .88rem;
+        text-align: center;
+    }
+    .footer-copy i { color: #e83e8c; }
+
+    /* ========== BOTTOM TAB BAR ========== */
+    .bottom-tab-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(255,255,255,.97);
+        backdrop-filter: blur(12px);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0 8px;
+        box-shadow: 0 -4px 20px rgba(232,62,140,.15);
+        border-top: 2px solid transparent;
+        border-image: var(--pp-gradient) 1;
+        z-index: 1050;
+        direction: rtl;
+    }
+    .bottom-tab-bar .tab-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #aaa;
+        font-size: .72rem;
+        font-weight: 600;
+        transition: all .3s;
+        position: relative;
+        flex: 1;
+        padding: 4px 0;
+        gap: 4px;
+        font-family: 'Cairo', sans-serif;
+    }
+    .bottom-tab-bar .tab-item i {
+        font-size: 1.25rem;
+        transition: all .3s;
+    }
+    .bottom-tab-bar .tab-item.active {
+        color: var(--pp-primary);
+    }
+    .bottom-tab-bar .tab-item.active i {
+        transform: translateY(-3px);
+        filter: drop-shadow(0 4px 6px rgba(232,62,140,.4));
+    }
+    .bottom-tab-bar .tab-item.active::before {
+        content: '';
+        position: absolute;
+        top: -2px; left: 50%;
+        transform: translateX(-50%);
+        width: 28px; height: 3px;
+        background: var(--pp-gradient);
+        border-radius: 0 0 4px 4px;
+        animation: tabSlide .3s ease;
+    }
+    @keyframes tabSlide {
+        from { width: 0; opacity: 0; }
+        to   { width: 28px; opacity: 1; }
+    }
+    .bottom-tab-bar .tab-item:hover {
+        color: var(--pp-primary);
+    }
+    .bottom-tab-bar .tab-item:hover i {
+        transform: translateY(-3px);
+    }
+    .tab-badge {
+        position: absolute;
+        top: 2px; right: 22%;
+        background: #e83e8c;
+        color: #fff;
+        font-size: .65rem;
+        font-weight: 700;
+        min-width: 18px; height: 18px;
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        padding: 0 4px;
+        border: 2px solid #fff;
+    }
+
+    /* body padding so content not hidden behind tab bar */
+    body { padding-bottom: 75px !important; }
+</style>
+
+<!-- ===== FOOTER ===== -->
+<footer class="custom-footer">
+    <div class="container">
+        <div class="row g-4">
+
+            <!-- Brand -->
+            <div class="col-lg-4 col-md-6">
+                <h5><i class="fas fa-heart me-2" style="background:var(--pp-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i><?= htmlspecialchars($site_name) ?></h5>
+                <p><?= htmlspecialchars($site_desc) ?></p>
+                <div class="footer-social">
+                    <?php if (!empty($facebook)):  ?><a href="<?= htmlspecialchars($facebook)  ?>" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a><?php endif; ?>
+                    <?php if (!empty($instagram)): ?><a href="<?= htmlspecialchars($instagram) ?>" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a><?php endif; ?>
+                    <?php if (!empty($twitter)):   ?><a href="<?= htmlspecialchars($twitter)   ?>" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a><?php endif; ?>
+                    <?php if (!empty($snapchat)):  ?><a href="<?= htmlspecialchars($snapchat)  ?>" target="_blank" title="Snapchat"><i class="fab fa-snapchat"></i></a><?php endif; ?>
+                    <?php if (!empty($tiktok)):    ?><a href="<?= htmlspecialchars($tiktok)    ?>" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a><?php endif; ?>
                 </div>
             </div>
-            
-            <hr class="my-4">
-            
-            <!-- حقوق النشر -->
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; <?= htmlspecialchars($copyright_year) ?> <?= htmlspecialchars($site_name) ?>. جميع الحقوق محفوظة.</p>
+
+            <!-- Quick Links -->
+            <div class="col-lg-2 col-md-6 col-6">
+                <h6>روابط سريعة</h6>
+                <ul>
+                    <li><a href="home.php"><i class="fas fa-chevron-left fa-xs"></i> الرئيسية</a></li>
+                    <li><a href="product.php"><i class="fas fa-chevron-left fa-xs"></i> المنتجات</a></li>
+                    <li><a href="wishlist.php"><i class="fas fa-chevron-left fa-xs"></i> المفضلة</a></li>
+                    <li><a href="about.php"><i class="fas fa-chevron-left fa-xs"></i> من نحن</a></li>
+                    <li><a href="blog.php"><i class="fas fa-chevron-left fa-xs"></i> المدونة</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div class="col-lg-3 col-md-6 col-6">
+                <h6>تواصل معنا</h6>
+                <ul>
+                    <?php if (!empty($contact_phone)): ?>
+                    <li><i class="fas fa-phone"></i> <?= htmlspecialchars($contact_phone) ?></li>
+                    <?php endif; ?>
+                    <?php if (!empty($contact_email)): ?>
+                    <li><i class="fas fa-envelope"></i> <?= htmlspecialchars($contact_email) ?></li>
+                    <?php endif; ?>
+                    <?php if (!empty($site_address)): ?>
+                    <li><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($site_address) ?></li>
+                    <?php endif; ?>
+                    <li><i class="fas fa-clock"></i> السبت – الخميس: ٩ص – ١٠م</li>
+                </ul>
+                <ul class="mt-2">
+                    <li><a href="shipping.php"><i class="fas fa-shipping-fast"></i> الشحن والتوصيل</a></li>
+                    <li><a href="faq.php"><i class="fas fa-question-circle"></i> الأسئلة الشائعة</a></li>
+                    <li><a href="support.php"><i class="fas fa-headset"></i> الدعم الفني</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter -->
+            <div class="col-lg-3 col-md-6 footer-newsletter">
+                <h6>النشرة البريدية</h6>
+                <p>اشترك لتصلك أحدث العروض والتحديثات أولاً بأول</p>
+                <div class="input-group">
+                    <input type="email" id="footer-newsletter-email" class="form-control" placeholder="بريدك الإلكتروني">
+                    <button class="btn btn-subscribe" type="button" onclick="footerSubscribe()">
+                        <i class="fas fa-paper-plane me-1"></i> اشتراك
+                    </button>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <img src="https://via.placeholder.com/200x30?text=طرق+الدفع+المتاحة" alt="طرق الدفع" class="img-fluid">
-                </div>
+                <small class="d-block mt-2" style="color:rgba(255,255,255,.45);font-size:.8rem;"><i class="fas fa-lock me-1"></i>بياناتك محمية ولن تُشارك مع أي طرف</small>
             </div>
         </div>
-    </footer>
 
-    <nav class="bottom-tab-bar">
-        <a href="home.php" class="tab-item">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="categories.php" class="tab-item">
-            <i class="fas fa-th-large"></i>
-            <span>الفئات</span>
-        </a>
-        <a href="cart.php" class="tab-item">
-            <i class="fas fa-shopping-cart"></i>
-            <span>السلة</span>
-        </a>
-         <a href="product.php" class="tab-item active">
-            <i class="fas fa-user"></i>
-            <span>المنتجات</span>
-        </a>
-        <a href="order.php" class="tab-item">
-            <i class="fas fa-list-alt"></i>
-            <span>الطلبات</span>
-        </a>
-        <a href="profile.php" class="tab-item active">
-            <i class="fas fa-user"></i>
-            <span>حسابي</span>
-        </a>
-    </nav>
+        <hr class="footer-divider">
+        <p class="footer-copy mb-0">
+            جميع الحقوق محفوظة &copy; <?= date('Y') ?> <?= htmlspecialchars($site_name) ?>
+            &nbsp;|&nbsp; تصميم وتطوير بـ <i class="fas fa-heart"></i>
+        </p>
+    </div>
+</footer>
 
-    <script>
+<!-- ===== BOTTOM TAB BAR ===== -->
+<?php
+// حساب الشارات
+$tab_cart_count = 0;
+$tab_notif_count = 0;
+if (isset($_SESSION['user_id'])) {
+    // سلة التسوق
+    if (isset($conn)) {
+        $tc = $conn->query("SELECT SUM(quantity) as t FROM cart WHERE user_id = " . intval($_SESSION['user_id']));
+        if ($tc) $tab_cart_count = (int)($tc->fetch_assoc()['t'] ?? 0);
+        // إشعارات غير مقروءة
+        $tn = $conn->query("SELECT COUNT(*) as t FROM notifications WHERE user_id = " . intval($_SESSION['user_id']) . " AND is_read = 0");
+        if ($tn) $tab_notif_count = (int)($tn->fetch_assoc()['t'] ?? 0);
+    } elseif (isset($pdo)) {
+        $tc = $pdo->prepare("SELECT SUM(quantity) as t FROM cart WHERE user_id = ?");
+        $tc->execute([$_SESSION['user_id']]);
+        $tab_cart_count = (int)($tc->fetch(PDO::FETCH_ASSOC)['t'] ?? 0);
+        $tn = $pdo->prepare("SELECT COUNT(*) as t FROM notifications WHERE user_id = ? AND is_read = 0");
+        $tn->execute([$_SESSION['user_id']]);
+        $tab_notif_count = (int)($tn->fetch(PDO::FETCH_ASSOC)['t'] ?? 0);
+    }
+}
+?>
+<div class="bottom-tab-bar">
+    <a href="home.php" class="tab-item <?= in_array($current_page, ['home.php','index.php']) ? 'active' : '' ?>">
+        <i class="fas fa-home"></i>
+        <span>الرئيسية</span>
+    </a>
+    <a href="product.php" class="tab-item <?= in_array($current_page, ['product.php','products.php']) ? 'active' : '' ?>">
+        <i class="fas fa-store"></i>
+        <span>المنتجات</span>
+    </a>
+    <a href="cart.php" class="tab-item <?= ($current_page == 'cart.php') ? 'active' : '' ?>">
+        <i class="fas fa-shopping-cart"></i>
+        <?php if ($tab_cart_count > 0): ?>
+        <span class="tab-badge"><?= min($tab_cart_count, 99) ?></span>
+        <?php endif; ?>
+        <span>السلة</span>
+    </a>
+    <a href="categories.php" class="tab-item <?= ($current_page == 'categories.php') ? 'active' : '' ?>">
+        <i class="fas fa-th-large"></i>
+        <span>الفئات</span>
+    </a>
+    <a href="profile.php" class="tab-item <?= in_array($current_page, ['profile.php','acsses.php']) ? 'active' : '' ?>">
+        <i class="fas fa-user"></i>
+        <span>حسابي</span>
+    </a>
+</div>
 
-
-
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/main.js"></script>
-     <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-   
-      <script>
-        // Dropdown functionality
-        $(document).ready(function() {
-            const dropdownToggle = $('#user-dropdown-toggle');
-            const dropdownMenu = $('#user-dropdown-menu');
-            
-            dropdownToggle.click(function(e) {
-                e.stopPropagation();
-                dropdownMenu.toggleClass('show');
-            });
-            
-            // Close dropdown when clicking outside
-            $(document).click(function() {
-                dropdownMenu.removeClass('show');
-            });
-            
-            // Prevent dropdown from closing when clicking inside it
-            dropdownMenu.click(function(e) {
-                e.stopPropagation();
-            });
-            
-            // Sidebar functionality
-            $('#menu-toggle').click(function() {
-                $('#sidebar-menu').addClass('active');
-            });
-            
-            $('#close-menu').click(function() {
-                $('#sidebar-menu').removeClass('active');
-            });
-            
-            $(document).mouseup(function(e) {
-                const sidebar = $('#sidebar-menu');
-                if (!sidebar.is(e.target) && sidebar.has(e.target).length === 0) {
-                    sidebar.removeClass('active');
-                }
-            });
-        });
-    </script>
-    <script>
-                  
-
-
-                // دالة لإضافة منتج إلى السلة
-                function addToCart(productId, quantity, button) {
-                    if (button) {
-                        // إضافة تأثير مؤقت
-                        $(button).addClass('loading');
-                        $(button).prop('disabled', true);
-                    }
-                    
-                    $.ajax({
-                        url: 'ajax/add_to_cart.php',
-                        method: 'POST',
-                        data: {
-                            product_id: productId,
-                            quantity: quantity
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                // تحديث عدد العناصر في السلة
-                                updateCartCount();
-                                
-                                // عرض رسالة نجاح
-                                showAlert('تمت إضافة المنتج إلى السلة بنجاح!', 'success');
-                                
-                                // تأثير إضافي على الزر
-                                if (button) {
-                                    $(button).removeClass('loading').addClass('success');
-                                    setTimeout(() => {
-                                        $(button).removeClass('success').prop('disabled', false);
-                                    }, 1000);
-                                }
-                            } else {
-                                showAlert(response.message || 'حدث خطأ', 'error');
-                                if (button) {
-                                    $(button).removeClass('loading').prop('disabled', false);
-                                }
-                            }
-                        },
-                        error: function() {
-                            showAlert('حدث خطأ أثناء إضافة المنتج إلى السلة', 'error');
-                            if (button) {
-                                $(button).removeClass('loading').prop('disabled', false);
-                            }
-                        }
-                    });
-                }
-
-                // دالة للتبديل بين المفضلة
-                function toggleFavorite(productId, button) {
-                    const isActive = $(button).hasClass('active');
-                    const action = isActive ? 'remove' : 'add';
-                    
-                    $.ajax({
-                        url: 'ajax/toggle_favorite.php',
-                        method: 'POST',
-                        data: {
-                            product_id: productId,
-                            action: action
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                $(button).toggleClass('active');
-                                
-                                // تأثير القلب
-                                $(button).addClass('heartbeat');
-                                setTimeout(() => $(button).removeClass('heartbeat'), 300);
-                                
-                                // عرض رسالة
-                                const message = isActive ? 'تمت إزالة المنتج من المفضلة' : 'تمت إضافة المنتج إلى المفضلة';
-                                showAlert(message, 'success');
-                                
-                                // تحديث عدد المفضلة
-                                updateFavoritesCount();
-                            } else {
-                                showAlert(response.message || 'حدث خطأ', 'error');
-                            }
-                        },
-                        error: function() {
-                            showAlert('حدث خطأ أثناء تحديث المفضلة', 'error');
-                        }
-                    });
-                }
-              // دالة لعرض تفاصيل المنتج
-                function showProductDetails(productId) {
-                    $.ajax({
-                        url: 'ajax/get_product_details.php',
-                        method: 'GET',
-                        data: { product_id: productId },
-                        success: function(response) {
-                            if (response.success) {
-                                const product = response.product;
-                                
-                                // تحديث صورة المنتج
-                                const productImage = $('#product-detail-img');
-                                productImage.attr('src', product.main_image);
-                                productImage.attr('alt', product.name);
-                                productImage.on('error', function() {
-                                    $(this).attr('src', 'img/1.jpg');
-                                });
-                                
-                                // تحديث اسم المنتج
-                                $('#productDetailModalLabel').text('تفاصيل المنتج: ' + product.name);
-                                $('#product-detail-name').text(product.name);
-                                
-                                // تحديث الفئة
-                                $('#product-detail-category').text('الفئة: ' + product.category_name);
-                                
-                                // تحديث الأسعار
-                                $('#product-detail-price').text(product.selling_price + ' ر.س');
-                                
-                                if (product.old_price && product.old_price > 0) {
-                                    $('#product-detail-old-price').text(product.old_price + ' ر.س').show();
-                                    if (product.discount_percentage > 0) {
-                                        $('#product-detail-price').addClass('text-danger fw-bold');
-                                        $('#product-detail-old-price').addClass('text-decoration-line-through text-muted');
-                                        $('.discount-badge').remove();
-                                        $('#product-detail-price').before(
-                                            '<span class="discount-badge bg-danger text-white px-2 py-1 rounded ms-2">-' + 
-                                            product.discount_percentage + '%</span>'
-                                        );
-                                    }
-                                } else {
-                                    $('#product-detail-old-price').hide();
-                                    $('#product-detail-price').removeClass('text-danger fw-bold');
-                                    $('.discount-badge').remove();
-                                }
-                                
-                                // تحديث التقييم
-                                let ratingStars = '';
-                                for (let i = 1; i <= 5; i++) {
-                                    ratingStars += `<i class="${i <= Math.round(product.rating) ? 'fas' : 'far'} fa-star ${i <= product.rating ? 'text-warning' : ''}"></i>`;
-                                }
-                                ratingStars += ` <small class="text-muted ms-2">(${product.total_reviews} تقييم)</small>`;
-                                $('#product-detail-rating').html(ratingStars);
-                                
-                                // تحديث الوصف
-                                $('#product-detail-description').text(product.description || 'لا يوجد وصف متاح');
-                                
-                                // تحديث المخزون
-                                $('#product-detail-stock').text(product.stock);
-                                $('#product-detail-stock').removeClass('text-success text-warning text-danger');
-                                $('#product-detail-stock').addClass(product.stock_class);
-                                
-                                // تحديث الكمية
-                                $('#product-detail-quantity').val(response.cart_quantity || 1);
-                                
-                                // إعداد أزرار الإضافة
-                                $('#add-to-cart-detail')
-                                    .data('product-id', productId)
-                                    .off('click')
-                                    .on('click', function() {
-                                        const quantity = parseInt($('#product-detail-quantity').val());
-                                        addToCart(productId, quantity, this);
-                                    });
-                                
-                                // تحديث حالة زر المفضلة
-                                const favoriteBtn = $('#add-to-favorites-detail');
-                                favoriteBtn
-                                    .data('product-id', productId)
-                                    .off('click')
-                                    .on('click', function() {
-                                        toggleFavorite(productId, this);
-                                    });
-                                
-                                if (response.is_favorite) {
-                                    favoriteBtn.addClass('active').html('<i class="fas fa-heart me-2"></i>مضاف للمفضلة');
-                                } else {
-                                    favoriteBtn.removeClass('active').html('<i class="far fa-heart me-2"></i>أضف للمفضلة');
-                                }
-                                
-                                // عرض الألوان إذا كانت موجودة
-                                updateColors(product.colors);
-                                
-                                // عرض المقاسات إذا كانت موجودة
-                                updateSizes(product.sizes);
-                                
-                                // إضافة أزرار التحكم بالكمية
-                                setupQuantityControls();
-                                
-                                // فتح النافذة المنبثقة
-                                $('#productDetailModal').modal('show');
-                                
-                            } else {
-                                showToast('error', response.message || 'حدث خطأ في تحميل المنتج');
-                            }
-                        },
-                        error: function() {
-                            showToast('error', 'حدث خطأ في الاتصال بالخادم');
-                        }
-                    });
-                }
-
-                // دالة لتحديث عرض الألوان
-                function updateColors(colors) {
-                    const colorsContainer = $('#product-colors');
-                    colorsContainer.empty();
-                    
-                    if (colors.length > 0) {
-                        colorsContainer.append('<strong class="d-block mb-2">الألوان المتاحة:</strong>');
-                        const colorsList = $('<div class="d-flex gap-2 mb-3"></div>');
-                        
-                        colors.forEach(color => {
-                            const colorBtn = $(`
-                                <button type="button" class="btn btn-sm border rounded-circle p-3" 
-                                        style="background-color: ${color.color_code}" 
-                                        title="${color.color_name}"
-                                        data-color="${color.color_code}">
-                                </button>
-                            `);
-                            colorsList.append(colorBtn);
-                        });
-                        
-                        colorsContainer.append(colorsList);
-                    }
-                }
-
-                // دالة لتحديث عرض المقاسات
-                function updateSizes(sizes) {
-                    const sizesContainer = $('#product-sizes');
-                    sizesContainer.empty();
-                    
-                    if (sizes.length > 0) {
-                        sizesContainer.append('<strong class="d-block mb-2">المقاسات المتاحة:</strong>');
-                        const sizesList = $('<div class="d-flex flex-wrap gap-2 mb-3"></div>');
-                        
-                        sizes.forEach(size => {
-                            let sizeText = size.size;
-                            if (size.length || size.width) {
-                                sizeText += ' (';
-                                if (size.length) sizeText += size.length + ' سم طول';
-                                if (size.length && size.width) sizeText += ' × ';
-                                if (size.width) sizeText += size.width + ' سم عرض';
-                                sizeText += ')';
-                            }
-                            
-                            const sizeBtn = $(`
-                                <button type="button" class="btn btn-outline-primary btn-sm">
-                                    ${sizeText}
-                                </button>
-                            `);
-                            sizesList.append(sizeBtn);
-                        });
-                        
-                        sizesContainer.append(sizesList);
-                    }
-                }
-
-                // دالة لإعداد أزرار التحكم بالكمية
-                function setupQuantityControls() {
-                    const quantityInput = $('#product-detail-quantity');
-                    const productStock = parseInt($('#product-detail-stock').text());
-                    
-                    $('.quantity-btn').off('click').on('click', function() {
-                        const currentQuantity = parseInt(quantityInput.val());
-                        const isIncrement = $(this).text() === '+';
-                        
-                        let newQuantity = currentQuantity;
-                        if (isIncrement) {
-                            if (currentQuantity < productStock) {
-                                newQuantity = currentQuantity + 1;
-                            }
-                        } else {
-                            if (currentQuantity > 1) {
-                                newQuantity = currentQuantity - 1;
-                            }
-                        }
-                        
-                        quantityInput.val(newQuantity);
-                    });
-                }
-
-                // دالة لإظهار رسائل التأكيد
-                function showToast(type, message) {
-                    const toast = $(`
-                        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-                            <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-times-circle'} me-2"></i>
-                                        ${message}
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-                    
-                    $('body').append(toast);
-                    $('.toast').toast('show');
-                    
-                    setTimeout(() => {
-                        $('.toast').toast('hide');
-                        setTimeout(() => {
-                            $('.toast').remove();
-                        }, 300);
-                    }, 3000);
-                }
-            // دالة لتحديث عدد العناصر في السلة
-            function updateCartCount() {
-                $.ajax({
-                    url: 'ajax/get_cart_count.php',
-                    method: 'GET',
-                    success: function(response) {
-                        if (response.success) {
-                            $('.cart-count, .notification-badge').text(response.count);
-                        }
-                    }
-                });
-            }
-
-                // دالة لتحديث عدد المفضلة
-                function updateFavoritesCount() {
-                    $.ajax({
-                        url: 'ajax/get_favorites_count.php',
-                        method: 'GET',
-                        success: function(response) {
-                            if (response.success) {
-                                $('.favorites-count').text(response.count);
-                            }
-                        }
-                    });
-                }
-
-                // دالة لعرض رسائل التنبيه
-                function showAlert(message, type = 'info') {
-                    // إزالة أي رسالة سابقة
-                    $('.custom-alert').remove();
-                    
-                    // إنشاء رسالة جديدة
-                    const alertClass = {
-                        'success': 'alert-success',
-                        'error': 'alert-danger',
-                        'warning': 'alert-warning',
-                        'info': 'alert-info'
-                    }[type] || 'alert-info';
-                    
-                    const iconClass = {
-                        'success': 'fa-check-circle',
-                        'error': 'fa-exclamation-circle',
-                        'warning': 'fa-exclamation-triangle',
-                        'info': 'fa-info-circle'
-                    }[type] || 'fa-info-circle';
-                    
-                    const alertHtml = `
-                        <div class="custom-alert alert ${alertClass} alert-dismissible fade show position-fixed" 
-                            style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-                            <i class="fas ${iconClass} me-2"></i>
-                            ${message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    `;
-                    
-                    $('body').append(alertHtml);
-                    
-                    // إخفاء الرسالة تلقائياً بعد 3 ثواني
-                    setTimeout(() => {
-                        $('.custom-alert').alert('close');
-                    }, 3000);
-                }
-
-            // دالة لإعادة إرفاق الأحداث للمنتجات الجديدة
-            function attachProductEvents() {
-                // الكمية في نافذة التفاصيل
-                $('.quantity-btn').off('click').on('click', function() {
-                    const input = $(this).siblings('.quantity-input');
-                    let value = parseInt(input.val());
-                    
-                    if ($(this).hasClass('plus')) {
-                        value++;
-                    } else if ($(this).hasClass('minus') && value > 1) {
-                        value--;
-                    }
-                    
-                    input.val(value);
-                });
-            }
-
-
+<script>
+function footerSubscribe() {
+    var email = document.getElementById('footer-newsletter-email').value.trim();
+    if (!email) { alert('الرجاء إدخال بريدك الإلكتروني'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('بريد إلكتروني غير صحيح'); return; }
+    fetch('ajax/subscribe_newsletter.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'email=' + encodeURIComponent(email)
+    })
+    .then(r => r.json()).then(d => {
+        alert(d.message || 'تم الاشتراك بنجاح! 🎉');
+        document.getElementById('footer-newsletter-email').value = '';
+    })
+    .catch(() => {
+        alert('تم الاشتراك بنجاح! 🎉');
+        document.getElementById('footer-newsletter-email').value = '';
+    });
+}
 </script>
-    <script>
-
-        // في ملف main.js أو في <script>
-        $(document).ready(function() {
-            // تحديث عدد العناصر في السلة والمفضلة عند التحميل
-            updateCartCount();
-            updateFavoritesCount();
-            
-            // فتح Modal السلة
-            $('#cartModal').on('show.bs.modal', function() {
-                loadCartModal();
-            });
-            
-            // فتح Modal المفضلة
-            $('#favoritesModal').on('show.bs.modal', function() {
-                loadFavoritesModal();
-            });
-            
-            // تحديث السلة عند إغلاق الـ Modal
-            $('#cartModal, #favoritesModal').on('hidden.bs.modal', function() {
-                updateCartCount();
-                updateFavoritesCount();
-            });
-         });
-
-        // دالة لتحميل محتوى Modal السلة
-        function loadCartModal() {
-            $.ajax({
-                url: 'ajax/get_cart_modal.php',
-                method: 'GET',
-                beforeSend: function() {
-                    $('#cartModalBody').html(`
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">جاري التحميل...</span>
-                            </div>
-                            <p class="mt-3">جاري تحميل سلة التسوق...</p>
-                        </div>
-                    `);
-                },
-                success: function(response) {
-                    if (response.success) {
-                        if (response.items.length > 0) {
-                            let itemsHtml = '';
-                            
-                            response.items.forEach(function(item) {
-                                itemsHtml += `
-                                    <div class="cart-item d-flex align-items-center" data-item-id="${item.id}">
-                                        <img src="${item.image}" alt="${item.name}" class="cart-item-img me-3">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">${item.name}</h6>
-                                            ${item.options ? `<p class="product-options mb-1">${item.options}</p>` : ''}
-                                            <div class="quantity-controls d-flex align-items-center">
-                                                <button class="quantity-btn minus" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
-                                                <input type="text" class="quantity-input" value="${item.quantity}" readonly>
-                                                <button class="quantity-btn plus" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                                                <span class="ms-3 text-danger fw-bold">${item.total_price} ر.س</span>
-                                            </div>
-                                        </div>
-                                        <button class="btn btn-sm btn-outline-danger delete-btn ms-2" onclick="removeFromCart(${item.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                `;
-                            });
-                            
-                            $('#cartModalBody').html(`<div class="cart-items">${itemsHtml}</div>`);
-                            $('#cartModalFooter').show();
-                            
-                            // تحديث المجاميع
-                            $('#cart-total-price').text(response.summary.total_price + ' ر.س');
-                            $('#cart-tax').text(response.summary.tax + ' ر.س');
-                            $('#cart-grand-total').text(response.summary.grand_total + ' ر.س');
-                        } else {
-                            $('#cartModalBody').html(`
-                                <div class="empty-cart">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    <h4>سلة التسوق فارغة</h4>
-                                    <p class="text-muted">أضف بعض المنتجات لتظهر هنا</p>
-                                    <button class="btn btn-primary mt-3" data-bs-dismiss="modal">
-                                        <i class="fas fa-store me-2"></i>متابعة التسوق
-                                    </button>
-                                </div>
-                            `);
-                            $('#cartModalFooter').hide();
-                        }
-                    } else {
-                        $('#cartModalBody').html(`
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                ${response.message || 'حدث خطأ في تحميل السلة'}
-                            </div>
-                        `);
-                    }
-                },
-                error: function() {
-                    $('#cartModalBody').html(`
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            حدث خطأ في الاتصال بالخادم
-                        </div>
-                    `);
-                }
-            });
-        }
-
-        // دالة لتحميل محتوى Modal المفضلة
-        function loadFavoritesModal() {
-            $.ajax({
-                url: 'ajax/get_favorites_modal.php',
-                method: 'GET',
-                beforeSend: function() {
-                    $('#favoritesModalBody').html(`
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">جاري التحميل...</span>
-                            </div>
-                            <p class="mt-3">جاري تحميل قائمة المفضلة...</p>
-                        </div>
-                    `);
-                },
-                success: function(response) {
-                    if (response.success) {
-                        if (response.items.length > 0) {
-                            let itemsHtml = '';
-                            
-                            response.items.forEach(function(item) {
-                                itemsHtml += `
-                                    <div class="favorite-item d-flex align-items-center" data-item-id="${item.id}">
-                                        <img src="${item.image}" alt="${item.name}" class="favorite-item-img me-3">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">${item.name}</h6>
-                                            <p class="text-muted mb-1">${item.category}</p>
-                                            <div class="d-flex align-items-center">
-                                                <span class="text-danger fw-bold me-3">${item.price} ر.س</span>
-                                                <span class="badge ${item.in_stock ? 'bg-success' : 'bg-danger'}">
-                                                    ${item.in_stock ? 'متوفر' : 'غير متوفر'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex">
-                                            ${item.in_stock ? 
-                                                `<button class="btn btn-sm btn-outline-danger me-2" onclick="addToCart(${item.product_id}, 1)">
-                                                    <i class="fas fa-shopping-cart"></i>
-                                                </button>` : ''
-                                            }
-                                            <button class="btn btn-sm btn-outline-secondary delete-btn" onclick="removeFromWishlist(${item.id})">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                            
-                            $('#favoritesModalBody').html(`<div class="favorite-items">${itemsHtml}</div>`);
-                            $('#favoritesModalFooter').show();
-                        } else {
-                            $('#favoritesModalBody').html(`
-                                <div class="empty-favorites">
-                                    <i class="fas fa-heart"></i>
-                                    <h4>قائمة المفضلة فارغة</h4>
-                                    <p class="text-muted">أضف بعض المنتجات لتظهر هنا</p>
-                                    <button class="btn btn-primary mt-3" data-bs-dismiss="modal">
-                                        <i class="fas fa-store me-2"></i>متابعة التسوق
-                                    </button>
-                                </div>
-                            `);
-                            $('#favoritesModalFooter').hide();
-                        }
-                    } else {
-                        $('#favoritesModalBody').html(`
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                ${response.message || 'حدث خطأ في تحميل المفضلة'}
-                            </div>
-                        `);
-                    }
-                },
-                error: function() {
-                    $('#favoritesModalBody').html(`
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            حدث خطأ في الاتصال بالخادم
-                        </div>
-                    `);
-                }
-            });
-        }
-
-        // دالة لتحديث كمية المنتج في السلة
-        function updateCartQuantity(cartItemId, newQuantity) {
-            if (newQuantity < 1) {
-                removeFromCart(cartItemId);
-                return;
-            }
-            
-            $.ajax({
-                url: 'ajax/update_cart_quantity.php',
-                method: 'POST',
-                data: {
-                    cart_item_id: cartItemId,
-                    quantity: newQuantity
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // تحديث السلة مباشرة
-                        loadCartModal();
-                        updateCartCount();
-                        showAlert('تم تحديث الكمية بنجاح', 'success');
-                    } else {
-                        showAlert(response.message || 'حدث خطأ', 'error');
-                    }
-                }
-            });
-        }
-
-                // دالة لحذف منتج من السلة
-                function removeFromCart(cartItemId) {
-                    if (!confirm('هل تريد حذف هذا المنتج من السلة؟')) return;
-                    
-                    $.ajax({
-                        url: 'ajax/remove_from_cart.php',
-                        method: 'POST',
-                        data: { cart_item_id: cartItemId },
-                        success: function(response) {
-                            if (response.success) {
-                                loadCartModal();
-                                updateCartCount();
-                                showAlert('تم حذف المنتج من السلة', 'success');
-                            } else {
-                                showAlert(response.message || 'حدث خطأ', 'error');
-                            }
-                        }
-                    });
-                }
-
-                // دالة لحذف منتج من المفضلة
-                function removeFromWishlist(wishlistItemId) {
-                    if (!confirm('هل تريد حذف هذا المنتج من المفضلة؟')) return;
-                    
-                    $.ajax({
-                        url: 'ajax/remove_from_wishlist.php',
-                        method: 'POST',
-                        data: { wishlist_item_id: wishlistItemId },
-                        success: function(response) {
-                            if (response.success) {
-                                loadFavoritesModal();
-                                updateFavoritesCount();
-                                showAlert('تم حذف المنتج من المفضلة', 'success');
-                            } else {
-                                showAlert(response.message || 'حدث خطأ', 'error');
-                            }
-                        }
-                    });
-                }
-
-                // دالة لتحديث عدد عناصر السلة
-                function updateCartCount() {
-                    $.ajax({
-                        url: 'ajax/get_cart_count.php',
-                        method: 'GET',
-                        success: function(response) {
-                            if (response.success) {
-                                $('.cart-count, #cart-badge').text(response.count);
-                            }
-                        }
-                    });
-                }
-
-                // دالة لتحديث عدد عناصر المفضلة
-                function updateFavoritesCount() {
-                    $.ajax({
-                        url: 'ajax/get_favorites_count.php',
-                        method: 'GET',
-                        success: function(response) {
-                            if (response.success) {
-                                $('.favorites-count, #favorites-badge').text(response.count);
-                            }
-                        }
-                    });
-                }
-                $(document).ready(function() {
-                    // تحديث عدد عناصر السلة
-                    function updateCartCount() {
-                        $.ajax({
-                            url: 'ajax/get_cart_count.php',
-                            method: 'GET',
-                            success: function(response) {
-                                $('#cart-badge').text(response.count);
-                            }
-                        });
-                    }
-                    
-                    // تحديث عند التحميل
-                    updateCartCount();
-                    
-                    // فلتر المنتجات حسب الفئة
-                    $('.category-filter-btn').click(function() {
-                        const categoryId = $(this).data('category');
-                        
-                        // تحديث الحالة النشطة للأزرار
-                        $('.category-filter-btn').removeClass('active');
-                        $(this).addClass('active');
-                        
-                        // إخفاء جميع المنتجات أولاً
-                        $('.product-card').hide();
-                        
-                        if (categoryId === 'all') {
-                            // إظهار جميع المنتجات
-                            $('.product-card').show();
-                        } else {
-                            // إظهار المنتجات الخاصة بالفئة المحددة
-                            $('.product-card[data-category="' + categoryId + '"]').show();
-                        }
-                    });
-                    
-                    // إدارة الكمية
-                    $('.quantity-btn').click(function() {
-                        const input = $(this).siblings('.quantity-input');
-                        let value = parseInt(input.val());
-                        
-                        if ($(this).text() === '+') {
-                            value++;
-                        } else if ($(this).text() === '-' && value > 1) {
-                            value--;
-                        }
-                        
-                        input.val(value);
-                    });
-                    
-                    // إضافة منتج إلى السلة
-                    $(document).on('click', '.add-to-cart-btn', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const productId = $(this).data('product-id');
-                        
-                        $.ajax({
-                            url: 'ajax/add_to_cart.php',
-                            method: 'POST',
-                            data: {
-                                product_id: productId,
-                                quantity: 1
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    // تحديث عدد العناصر في السلة
-                                    $('#cart-badge').text(response.cart_count);
-                                    
-                                    // عرض رسالة نجاح
-                                    alert(response.message);
-                                } else {
-                                    alert(response.message);
-                                }
-                            }
-                        });
-                    });
-                    
-                    // عرض تفاصيل المنتج
-                    $(document).on('click', '.quick-view-btn', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const productId = $(this).data('product-id');
-                        
-                        $.ajax({
-                            url: 'ajax/get_product_details.php',
-                            method: 'GET',
-                            data: { product_id: productId },
-                            success: function(response) {
-                                if (response.success) {
-                                    const product = response.product;
-                                    
-                                    // تعبئة البيانات في النافذة المنبثقة
-                                    $('#product-detail-img').attr('src', product.image || 'img/default-product.jpg');
-                                    $('#product-detail-name').text(product.name);
-                                    $('#product-detail-category').text('الفئة: ' + product.category_name);
-                                    $('#product-detail-price').text(product.selling_price + ' ر.س');
-                                    
-                                    if (product.old_price) {
-                                        $('#product-detail-old-price').text(product.old_price + ' ر.س').show();
-                                    } else {
-                                        $('#product-detail-old-price').hide();
-                                    }
-                                    
-                                    // إنشاء نجوم التقييم
-                                    let ratingStars = '';
-                                    const rating = product.rating || 0;
-                                    for (let i = 1; i <= 5; i++) {
-                                        ratingStars += `<i class="${i <= rating ? 'fas' : 'far'} fa-star"></i>`;
-                                    }
-                                    $('#product-detail-rating').php(ratingStars);
-                                    
-                                    $('#product-detail-description').text(product.description || 'لا يوجد وصف.');
-                                    $('#product-detail-stock').text(product.stock || 0);
-                                    $('#product-detail-quantity').val(1);
-                                    
-                                    // إعداد أزرار الإضافة
-                                    $('#add-to-cart-detail').data('product-id', productId);
-                                    $('#add-to-favorites-detail').data('product-id', productId);
-                                    
-                                    // فتح النافذة المنبثقة
-                                    $('#productDetailModal').modal('show');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // إضافة منتج إلى السلة من نافذة التفاصيل
-                    $('#add-to-cart-detail').click(function() {
-                        const productId = $(this).data('product-id');
-                        const quantity = parseInt($('#product-detail-quantity').val());
-                        
-                        $.ajax({
-                            url: 'ajax/add_to_cart.php',
-                            method: 'POST',
-                            data: {
-                                product_id: productId,
-                                quantity: quantity
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    // تحديث عدد العناصر في السلة
-                                    $('#cart-badge').text(response.cart_count);
-                                    
-                                    // إغلاق النافذة المنبثقة وعرض رسالة نجاح
-                                    $('#productDetailModal').modal('hide');
-                                    alert(response.message);
-                                } else {
-                                    alert(response.message);
-                                }
-                            }
-                        });
-                    });
-                    
-                    // إضافة منتج إلى المفضلة
-                    $(document).on('click', '.favorite-btn', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const productId = $(this).data('product-id');
-                        const isActive = $(this).hasClass('active');
-                        
-                        $.ajax({
-                            url: 'ajax/toggle_favorite.php',
-                            method: 'POST',
-                            data: {
-                                product_id: productId,
-                                action: isActive ? 'remove' : 'add'
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    // تبديل حالة الزر
-                                    $(this).toggleClass('active');
-                                    alert(response.message);
-                                }
-                            }.bind(this)
-                        });
-                    });
-                });
-    </script>
-</body>
-</html>

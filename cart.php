@@ -80,13 +80,30 @@ function addToCart($product_id, $quantity) {
     global $conn;
     
     $product = getProductById($product_id);
+    if (!$product) return ['success' => false, 'message' => 'المنتج غير موجود'];
     
-    if ($product) {
-        // التحقق من المخزون
-        if ($quantity > $product['quantity']) {
-            return ['success' => false, 'message' => 'الكمية المطلوبة غير متوفرة في المخزون'];
+    if ($quantity > $product['quantity']) {
+        return ['success' => false, 'message' => 'الكمية المطلوبة غير متوفرة في المخزون'];
+    }
+    
+    if (isset($_SESSION['user_id'])) {
+        $user_id = $_SESSION['user_id'];
+        $check_stmt = $conn->prepare("SELECT quantity FROM cart WHERE user_id = ? AND product_id = ?");
+        $check_stmt->bind_param("ii", $user_id, $product_id);
+        $check_stmt->execute();
+        $res = $check_stmt->get_result();
+        if ($res->num_rows > 0) {
+            $row = $res->fetch_assoc();
+            $new_qty = $row['quantity'] + $quantity;
+            $upd_stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?");
+            $upd_stmt->bind_param("iii", $new_qty, $user_id, $product_id);
+            $upd_stmt->execute();
+        } else {
+            $ins_stmt = $conn->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)");
+            $ins_stmt->bind_param("iii", $user_id, $product_id, $quantity);
+            $ins_stmt->execute();
         }
-        
+    } else {
         if (isset($_SESSION['cart'][$product_id])) {
             $_SESSION['cart'][$product_id]['quantity'] += $quantity;
         } else {
@@ -94,55 +111,74 @@ function addToCart($product_id, $quantity) {
                 'id' => $product['id'],
                 'name' => $product['name'],
                 'selling_price' => floatval($product['selling_price']),
-                'old_price' => $product['old_price'] ? floatval($product['old_price']) : null,
-                'discount' => floatval($product['discount']),
                 'quantity' => intval($quantity),
-                'stock' => intval($product['quantity']), // استخدم quantity من قاعدة البيانات
-                'image' => $product['main_image'] ?: 'img/1.jpg'
+                'stock' => intval($product['quantity'])
             ];
         }
-        
-        return ['success' => true, 'cart_count' => count($_SESSION['cart'])];
     }
-    
-    return ['success' => false, 'message' => 'المنتج غير موجود'];
+    return ['success' => true];
 }
 
 // دالة لتحديث كمية منتج
 function updateCart($product_id, $quantity) {
-    if (isset($_SESSION['cart'][$product_id])) {
-        // التحقق من المخزون
-        $product = getProductById($product_id);
-        if ($quantity > $product['quantity']) {
-            return ['success' => false, 'message' => 'الكمية المطلوبة غير متوفرة في المخزون'];
+    global $conn;
+    $product = getProductById($product_id);
+    if (!$product) return ['success' => false, 'message' => 'المنتج غير موجود'];
+    
+    if ($quantity > $product['quantity']) {
+        return ['success' => false, 'message' => 'الكمية غير متوفرة'];
+    }
+    
+    if (isset($_SESSION['user_id'])) {
+        $user_id = $_SESSION['user_id'];
+        if ($quantity <= 0) {
+            $del_stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ?");
+            $del_stmt->bind_param("ii", $user_id, $product_id);
+            $del_stmt->execute();
+        } else {
+            $upd_stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ?");
+            $upd_stmt->bind_param("iii", $quantity, $user_id, $product_id);
+            $upd_stmt->execute();
         }
-        
+        return ['success' => true];
+    } else {
         if ($quantity <= 0) {
             unset($_SESSION['cart'][$product_id]);
         } else {
             $_SESSION['cart'][$product_id]['quantity'] = intval($quantity);
         }
-        
-        return ['success' => true, 'cart_count' => count($_SESSION['cart'])];
+        return ['success' => true];
     }
-    
-    return ['success' => false, 'message' => 'المنتج غير موجود في السلة'];
 }
 
 // دالة لحذف منتج من السلة
 function removeFromCart($product_id) {
-    if (isset($_SESSION['cart'][$product_id])) {
-        unset($_SESSION['cart'][$product_id]);
-        return ['success' => true, 'cart_count' => count($_SESSION['cart'])];
+    global $conn;
+    if (isset($_SESSION['user_id'])) {
+        $user_id = $_SESSION['user_id'];
+        $del_stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND product_id = ?");
+        $del_stmt->bind_param("ii", $user_id, $product_id);
+        $del_stmt->execute();
+    } else {
+        if (isset($_SESSION['cart'][$product_id])) {
+            unset($_SESSION['cart'][$product_id]);
+        }
     }
-    
-    return ['success' => false, 'message' => 'المنتج غير موجود في السلة'];
+    return ['success' => true];
 }
 
 // دالة لتفريغ السلة
 function clearCart() {
-    $_SESSION['cart'] = [];
-    return ['success' => true, 'cart_count' => 0];
+    global $conn;
+    if (isset($_SESSION['user_id'])) {
+        $user_id = $_SESSION['user_id'];
+        $del_stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+        $del_stmt->bind_param("i", $user_id);
+        $del_stmt->execute();
+    } else {
+        $_SESSION['cart'] = [];
+    }
+    return ['success' => true];
 }
 
 // دالة للحصول على منتج بواسطة ID

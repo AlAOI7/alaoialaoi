@@ -261,7 +261,14 @@ foreach ($settings as $setting) {
             
             .main-content {
                 padding: 15px;
+                padding-bottom: 80px;
             }
+        }
+        
+        .sticky-bottom-action {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 30px;
         }
         
         .note-editor.note-frame {
@@ -346,8 +353,8 @@ foreach ($settings as $setting) {
 
                 <!-- نموذج الإعدادات -->
                 <div class="card">
-                    <div class="card-header">
-                        <ul class="nav nav-tabs card-header-tabs" id="settingsTabs" role="tablist">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <ul class="nav nav-tabs card-header-tabs m-0" id="settingsTabs" role="tablist" style="border-bottom: none;">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">الإعدادات العامة</button>
                             </li>
@@ -358,9 +365,13 @@ foreach ($settings as $setting) {
                                 <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">إعدادات النظام</button>
                             </li>
                         </ul>
+                        <!-- Add a save button at the top too just in case -->
+                        <button type="submit" form="settings-form" class="btn btn-primary btn-sm px-4 fw-bold">
+                            <i class="fas fa-save me-1"></i> حفظ
+                        </button>
                     </div>
                     <div class="card-body">
-                        <form method="POST" enctype="multipart/form-data">
+                        <form id="settings-form" method="POST" enctype="multipart/form-data">
                             <div class="tab-content" id="settingsTabsContent">
                                 <!-- تبويب الإعدادات العامة -->
                                 <div class="tab-pane fade show active" id="general" role="tabpanel">
@@ -439,8 +450,8 @@ foreach ($settings as $setting) {
                                 </div>
                             </div>
                             
-                            <div class="mt-4 text-center">
-                                <button type="submit" class="btn btn-primary btn-lg">
+                            <div class="sticky-bottom-action">
+                                <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm fw-bold" style="border-radius: 10px;">
                                     <i class="fas fa-save me-2"></i> حفظ الإعدادات
                                 </button>
                             </div>

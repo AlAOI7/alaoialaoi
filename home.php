@@ -45,6 +45,14 @@
                                 ORDER BY p.created_at DESC LIMIT 8";
         $featured_products_result = mysqli_query($conn, $featured_products_query);
 
+        // جلب المنتجات الرائجة (Trending)
+        $popular_products_query = "SELECT p.*, c.name as category_name 
+                                FROM products p 
+                                JOIN categories c ON p.category_id = c.id 
+                                WHERE p.popular = 1 AND p.status = 'active' 
+                                ORDER BY p.created_at DESC LIMIT 8";
+        $popular_products_result = mysqli_query($conn, $popular_products_query);
+
         // جلب جميع المنتجات
         // $all_products_query = "SELECT p.*, c.name as category_name 
         //                     FROM products p 
@@ -52,6 +60,14 @@
         //                     WHERE p.status = 'active' 
         //                     ORDER BY p.created_at DESC LIMIT 20";
         // $all_products_result = mysqli_query($conn, $all_products_query);
+        
+        // جلب المنتجات الجديدة (خلال أسبوع)
+        $one_week_ago = date('Y-m-d H:i:s', strtotime('-7 days'));
+        $new_products_query = "SELECT p.*, c.name as category_name FROM products p 
+                               LEFT JOIN categories c ON p.category_id = c.id
+                               WHERE p.created_at >= '$one_week_ago' AND p.status = 'active'
+                               ORDER BY p.created_at DESC LIMIT 8";
+        $new_products_result = mysqli_query($conn, $new_products_query);
   
 // استعلام لجلب البراندات النشطة مع عدد المنتجات
 $brands_query = "SELECT 
@@ -63,6 +79,21 @@ $brands_query = "SELECT
                  ORDER BY b.products_count DESC, b.name ASC";
 
 $brands_result = mysqli_query($conn, $brands_query);
+
+// جلب الكوبونات النشطة فقط
+$now = date('Y-m-d H:i:s');
+$coupons_query = "SELECT * FROM coupons 
+                  WHERE is_active = 1 
+                  AND (start_date IS NULL OR start_date <= '$now')
+                  AND (end_date IS NULL OR end_date >= '$now')
+                  ORDER BY created_at DESC LIMIT 10";
+$coupons_result = mysqli_query($conn, $coupons_query);
+$active_coupons = [];
+if ($coupons_result) {
+    while ($c = mysqli_fetch_assoc($coupons_result)) {
+        $active_coupons[] = $c;
+    }
+}
 
 ?>
 
@@ -494,6 +525,270 @@ $brands_result = mysqli_query($conn, $brands_query);
                 <?php while($product = mysqli_fetch_assoc($featured_products_result)): ?>
                     <?php echo generateProductCard($product); ?>
                 <?php endwhile; ?>
+            </div>
+        </section>
+
+<?php if (!empty($active_coupons)): ?>
+<!-- قسم كوبونات العروض -->
+<section class="coupons-slider-section my-4">
+    <h2 class="section-title">🎁 عروض خاصة</h2>
+    <div class="coupons-slider-wrapper">
+        <div class="coupons-slider" id="coupons-track">
+            <?php foreach ($active_coupons as $coupon): ?>
+            <?php
+                $badge_color = ($coupon['discount_type'] === 'percentage') ? '#e91e63' : '#9c27b0';
+                $discount_text = ($coupon['discount_type'] === 'percentage')
+                    ? 'خصم ' . intval($coupon['discount_value']) . '%'
+                    : 'خصم ' . number_format($coupon['discount_value'], 0) . ' ر.س';
+                $expiry_text = !empty($coupon['end_date']) ? date('d/m/Y', strtotime($coupon['end_date'])) : '';
+            ?>
+            <div class="coupon-slide" onclick="showCouponModal(<?= htmlspecialchars(json_encode($coupon)) ?>)">
+                <div class="coupon-card">
+                    <div class="coupon-ribbon" style="background:<?= $badge_color ?>"><?= $discount_text ?></div>
+                    <div class="coupon-body">
+                        <div class="coupon-icon">🎟️</div>
+                        <div class="coupon-code"><?= htmlspecialchars($coupon['code']) ?></div>
+                        <?php if (!empty($coupon['description'])): ?>
+                        <div class="coupon-desc"><?= mb_substr(strip_tags($coupon['description']), 0, 50) ?></div>
+                        <?php endif; ?>
+                        <?php if ($expiry_text): ?>
+                        <div class="coupon-expiry">⏰ ينتهي: <?= $expiry_text ?></div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="coupon-footer">اضغط للتفاصيل</div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- Modal تفاصيل الكوبون -->
+<div id="couponDetailModal" class="coupon-modal-overlay" onclick="closeCouponModal(event)">
+    <div class="coupon-modal-box">
+        <button class="coupon-modal-close" onclick="document.getElementById('couponDetailModal').style.display='none'">&times;</button>
+        <div class="coupon-modal-ribbon" id="couponModalRibbon"></div>
+        <div class="coupon-modal-icon">🎟️</div>
+        <h3 id="couponModalCode"></h3>
+        <div class="coupon-modal-badge" id="couponModalBadge"></div>
+        <p id="couponModalDesc"></p>
+        <div id="couponModalMeta"></div>
+        <button class="coupon-modal-copy" onclick="copyCouponCode()">📋 نسخ الكود</button>
+        <span id="copiedMsg" style="display:none;color:green;margin-top:8px;font-weight:bold">✅ تم النسخ!</span>
+    </div>
+</div>
+
+<style>
+.coupons-slider-section { padding: 0 0 10px 0; }
+.coupons-slider-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #e91e63 #f0f0f0;
+    padding-bottom: 8px;
+}
+.coupons-slider-wrapper::-webkit-scrollbar { height: 5px; }
+.coupons-slider-wrapper::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 10px; }
+.coupons-slider-wrapper::-webkit-scrollbar-thumb { background: #e91e63; border-radius: 10px; }
+.coupons-slider {
+    display: flex;
+    gap: 16px;
+    padding: 8px 4px;
+    width: max-content;
+}
+.coupon-slide { cursor: pointer; transition: transform 0.2s; }
+.coupon-slide:hover { transform: translateY(-4px); }
+.coupon-card {
+    width: 180px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(233,30,99,0.13);
+    overflow: hidden;
+    border: 2px dashed #e91e6340;
+    position: relative;
+    transition: box-shadow 0.2s;
+}
+.coupon-card:hover { box-shadow: 0 8px 28px rgba(233,30,99,0.22); }
+.coupon-ribbon {
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 10px;
+    text-align: center;
+}
+.coupon-body { padding: 12px 10px 6px; text-align: center; }
+.coupon-icon { font-size: 28px; margin-bottom: 4px; }
+.coupon-code {
+    font-size: 15px;
+    font-weight: 800;
+    color: #333;
+    letter-spacing: 2px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: inline-block;
+    margin-bottom: 6px;
+}
+.coupon-desc { font-size: 12px; color: #666; margin-bottom: 4px; }
+.coupon-expiry { font-size: 11px; color: #e91e63; }
+.coupon-footer {
+    background: linear-gradient(135deg, #e91e63, #9c27b0);
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    padding: 7px;
+    font-weight: 600;
+}
+/* Modal */
+.coupon-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+.coupon-modal-overlay.active { display: flex; }
+.coupon-modal-box {
+    background: white;
+    border-radius: 20px;
+    padding: 30px 24px 24px;
+    max-width: 380px;
+    width: 92%;
+    position: relative;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    animation: popIn 0.3s ease;
+}
+@keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+.coupon-modal-close {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+.coupon-modal-ribbon {
+    height: 8px;
+    border-radius: 8px 8px 0 0;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+}
+.coupon-modal-icon { font-size: 48px; margin: 10px 0 6px; }
+.coupon-modal-box h3 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #333;
+}
+.coupon-modal-badge {
+    display: inline-block;
+    color: white;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 5px 18px;
+    font-size: 15px;
+    margin-bottom: 12px;
+}
+.coupon-modal-box p { color: #555; font-size: 14px; margin-bottom: 10px; }
+#couponModalMeta { font-size: 13px; color: #888; margin-bottom: 16px; }
+.coupon-modal-copy {
+    background: linear-gradient(135deg, #e91e63, #9c27b0);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 10px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+}
+.coupon-modal-copy:hover { opacity: 0.9; }
+</style>
+
+<script>
+var _currentCouponCode = '';
+function showCouponModal(coupon) {
+    _currentCouponCode = coupon.code;
+    var discountText = coupon.discount_type === 'percentage'
+        ? 'خصم ' + Math.round(coupon.discount_value) + '%'
+        : 'خصم ' + parseFloat(coupon.discount_value).toFixed(0) + ' ر.س';
+    var color = coupon.discount_type === 'percentage' ? '#e91e63' : '#9c27b0';
+    document.getElementById('couponModalRibbon').style.background = 'linear-gradient(135deg,'+color+',#9c27b0)';
+    document.getElementById('couponModalCode').textContent = coupon.code;
+    document.getElementById('couponModalBadge').textContent = discountText;
+    document.getElementById('couponModalBadge').style.background = 'linear-gradient(135deg,'+color+',#9c27b0)';
+    document.getElementById('couponModalDesc').textContent = coupon.description || '';
+    var meta = [];
+    if (coupon.min_order_amount > 0) meta.push('🛈 حد أدنى للطلب: ' + parseFloat(coupon.min_order_amount).toFixed(0) + ' ر.س');
+    if (coupon.end_date) meta.push('⏰ ينتهي: ' + new Date(coupon.end_date).toLocaleDateString('ar-SA'));
+    if (coupon.usage_limit > 0) meta.push('🔄 استخدامات متبقية: ' + (coupon.usage_limit - (coupon.used_count||0)));
+    document.getElementById('couponModalMeta').innerHTML = meta.join('<br>');
+    document.getElementById('copiedMsg').style.display = 'none';
+    var modal = document.getElementById('couponDetailModal');
+    modal.classList.add('active');
+    modal.style.display = 'flex';
+}
+function closeCouponModal(e) {
+    if (e.target === document.getElementById('couponDetailModal')) {
+        document.getElementById('couponDetailModal').style.display = 'none';
+        document.getElementById('couponDetailModal').classList.remove('active');
+    }
+}
+function copyCouponCode() {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(_currentCouponCode);
+    } else {
+        var tmp = document.createElement('input');
+        tmp.value = _currentCouponCode;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+    }
+    document.getElementById('copiedMsg').style.display = 'block';
+    setTimeout(function(){ document.getElementById('copiedMsg').style.display='none'; }, 2000);
+}
+</script>
+<?php endif; ?>
+
+ <!-- المنتجات الرائجة -->
+        <section class="products-section mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="section-title">المنتجات الرائجة</h2>
+            </div>
+            <div class="products-grid" id="trending-products-grid">
+                <?php while($product = mysqli_fetch_assoc($popular_products_result)): ?>
+                    <?php echo generateProductCard($product); ?>
+                <?php endwhile; ?>
+            </div>
+        </section>
+
+ <!-- المنتجات الجديدة (خلال أسبوع) -->
+        <section class="products-section mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="section-title">جديدنا (خلال أسبوع)</h2>
+            </div>
+            <div class="products-grid" id="new-products-grid">
+                <?php if(mysqli_num_rows($new_products_result) > 0): ?>
+                    <?php while($product = mysqli_fetch_assoc($new_products_result)): ?>
+                        <?php echo generateProductCard($product); ?>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <p class="text-center text-muted w-100">لا توجد منتجات جديدة هذا الأسبوع.</p>
+                <?php endif; ?>
             </div>
         </section>
 

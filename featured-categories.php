@@ -17,7 +17,12 @@
             }
             $category_image = $image_path;
             $has_image = !empty($category_image) && file_exists($category_image);
-            $default_image = 'img/1.jpg'; // الصورة الافتراضية
+            
+            $settings = function_exists('getSettings') ? getSettings() : [];
+            $default_image = !empty($settings['site_logo']) ? $settings['site_logo'] : 'img/1.jpg';
+            if (strpos($default_image, '../') === 0) {
+                $default_image = substr($default_image, 3);
+            }
         ?>
             <a href="category-details.php?id=<?php echo $category['id']; ?>" class="text-decoration-none">
                 <div class="featured-category">

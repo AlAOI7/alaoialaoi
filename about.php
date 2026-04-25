@@ -20,23 +20,7 @@ if (!$about) {
     ];
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($about['meta_title'] ?? 'من نحن | Be Pretty'); ?></title>
-    <meta name="description" content="<?php echo htmlspecialchars($about['meta_description'] ?? ''); ?>">
-    <meta name="keywords" content="<?php echo htmlspecialchars($about['meta_keywords'] ?? ''); ?>">
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Animate CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    
+<?php require_once 'header.php'; ?>
     <style>
         :root {
             --primary-color: #e91e63;
@@ -302,28 +286,7 @@ if (!$about) {
             .about-card {
                 padding: 20px;
             }
-        }
-    </style>
-</head>
-<body>
-    <!-- الهيدر -->
-    <header class="main-header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-2">
-                    <button class="back-btn" onclick="window.location.href='home.php'">
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </div>
-                <div class="col-8 text-center">
-                    <h4 class="fw-bold mb-0">من نحن</h4>
-                </div>
-                <div class="col-2 text-end">
-                    <!-- يمكن إضافة أيقونة إضافية هنا -->
-                </div>
-            </div>
-        </div>
-    </header>
+</style>
 
     <!-- قسم البطل -->
     <section class="hero-section">
@@ -541,31 +504,6 @@ if (!$about) {
             <?php endif; ?>
         </div>
     </main>
-
-    <!-- شريط التنقل السفلي -->
-    <nav class="bottom-nav">
-        <a href="home.php" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="categories.php" class="nav-item">
-            <i class="fas fa-th-large"></i>
-            <span>الفئات</span>
-        </a>
-        <a href="cart.php" class="nav-item">
-            <i class="fas fa-shopping-cart"></i>
-            <span>السلة</span>
-        </a>
-        <a href="order.php" class="nav-item">
-            <i class="fas fa-list-alt"></i>
-            <span>الطلبات</span>
-        </a>
-        <a href="profile.php" class="nav-item">
-            <i class="fas fa-user"></i>
-            <span>حسابي</span>
-        </a>
-    </nav>
-
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -594,9 +532,7 @@ if (!$about) {
             function() { $(this).css('transform', 'scale(1)'); }
         );
     </script>
-</body>
-</html>
-
+<?php require_once 'footer.php'; ?>
 <?php
 if (isset($conn)) {
     $conn->close();

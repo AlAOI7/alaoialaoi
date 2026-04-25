@@ -48,7 +48,7 @@ if ($result->num_rows == 0) {
 $product = $result->fetch_assoc();
 
 // التحقق مما إذا كان المنتج في المفضلة
-$checkSql = "SELECT id FROM wishlist WHERE user_id = ? AND product_id = ?";
+$checkSql = "SELECT id FROM favorites WHERE user_id = ? AND product_id = ?";
 $checkStmt = $conn->prepare($checkSql);
 $checkStmt->bind_param("ii", $userId, $productId);
 $checkStmt->execute();
@@ -59,7 +59,7 @@ $isInWishlist = $checkResult->num_rows > 0;
 if ($action == 'add' || (!$isInWishlist && $action == 'toggle')) {
     // إضافة إلى المفضلة
     if (!$isInWishlist) {
-        $insertSql = "INSERT INTO wishlist (user_id, product_id) VALUES (?, ?)";
+        $insertSql = "INSERT INTO favorites (user_id, product_id) VALUES (?, ?)";
         $insertStmt = $conn->prepare($insertSql);
         $insertStmt->bind_param("ii", $userId, $productId);
         
@@ -80,7 +80,7 @@ if ($action == 'add' || (!$isInWishlist && $action == 'toggle')) {
 } elseif ($action == 'remove' || ($isInWishlist && $action == 'toggle')) {
     // إزالة من المفضلة
     if ($isInWishlist) {
-        $deleteSql = "DELETE FROM wishlist WHERE user_id = ? AND product_id = ?";
+        $deleteSql = "DELETE FROM favorites WHERE user_id = ? AND product_id = ?";
         $deleteStmt = $conn->prepare($deleteSql);
         $deleteStmt->bind_param("ii", $userId, $productId);
         

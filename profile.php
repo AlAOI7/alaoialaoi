@@ -99,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $birth_date = $_POST['birth_date'] ?? '';
         $city = trim($_POST['city'] ?? '');
         $country = trim($_POST['country'] ?? '');
+        $currency = trim($_POST['currency'] ?? 'YER_NEW');
         
         $errors = [];
         
@@ -122,14 +123,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($errors)) {
             $update_sql = "UPDATE users SET 
                           name = ?, email = ?, phone = ?, gender = ?, 
-                          birth_date = ?, city = ?, country = ?, updated_at = NOW() 
+                          birth_date = ?, city = ?, country = ?, currency = ?, updated_at = NOW() 
                           WHERE id = ?";
             $update_stmt = $conn->prepare($update_sql);
-            $update_stmt->bind_param("sssssssi", $name, $email, $phone, $gender, $birth_date, $city, $country, $user_id);
+            $update_stmt->bind_param("ssssssssi", $name, $email, $phone, $gender, $birth_date, $city, $country, $currency, $user_id);
             
             if ($update_stmt->execute()) {
                 $_SESSION['user_name'] = $name;
                 $_SESSION['email'] = $email;
+                $_SESSION['currency'] = $currency; // تحديث العملة في الجلسة
                 $user['name'] = $name;
                 $user['email'] = $email;
                 $user['phone'] = $phone;
@@ -137,6 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $user['birth_date'] = $birth_date;
                 $user['city'] = $city;
                 $user['country'] = $country;
+                $user['currency'] = $currency;
                 
                 $success_message = 'تم تحديث بياناتك الشخصية بنجاح';
             } else {
@@ -1103,6 +1106,20 @@ try {
             <?php endif; ?>
             
             <div class="info-item">
+                <span class="info-label">العملة المفضلة</span>
+                <span class="info-value">
+                    <?php 
+                        $cur = $user['currency'] ?? 'YER_NEW';
+                        if ($cur == 'YER_NEW') echo 'ريال يمني (جديد)';
+                        elseif ($cur == 'YER_OLD') echo 'ريال يمني (قديم)';
+                        elseif ($cur == 'SAR') echo 'ريال سعودي';
+                        elseif ($cur == 'USD') echo 'دولار أمريكي';
+                        else echo $cur;
+                    ?>
+                </span>
+            </div>
+            
+            <div class="info-item">
                 <span class="info-label">تاريخ التسجيل</span>
                 <span class="info-value"><?php echo date('Y-m-d', strtotime($user['created_at'])); ?></span>
             </div>
@@ -1272,6 +1289,16 @@ try {
                                            value="<?php echo htmlspecialchars($user['country'] ?? ''); ?>">
                                 </div>
                             </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">العملة المفضلة للتسوق</label>
+                            <select class="form-select" name="currency">
+                                <option value="YER_NEW" <?php echo ($user['currency'] ?? '') == 'YER_NEW' ? 'selected' : ''; ?>>ريال يمني (جديد)</option>
+                                <option value="YER_OLD" <?php echo ($user['currency'] ?? '') == 'YER_OLD' ? 'selected' : ''; ?>>ريال يمني (قديم)</option>
+                                <option value="SAR" <?php echo ($user['currency'] ?? '') == 'SAR' ? 'selected' : ''; ?>>ريال سعودي</option>
+                                <option value="USD" <?php echo ($user['currency'] ?? '') == 'USD' ? 'selected' : ''; ?>>دولار أمريكي</option>
+                            </select>
                         </div>
                         
                         <div class="d-grid gap-2 mt-4">

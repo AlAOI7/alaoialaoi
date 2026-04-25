@@ -1,6 +1,10 @@
 <?php
 session_start();
 require_once 'config/database.php';
+require_once 'functions.php';
+
+// إعدادات الموقع
+$site_settings  = getSettings();
 
 // التحقق من تسجيل الدخول - مرن للزوار والمسجلين
 $is_logged_in = isset($_SESSION['user_id']) && is_numeric($_SESSION['user_id']) && $_SESSION['user_id'] > 0;
@@ -35,10 +39,19 @@ if ($is_logged_in) {
     }
     $cart_empty = empty($cart_items);
 } else {
-    // للزوار: استخدام سلة الجلسة
+    // للزوار: استخدام سلة الجلسة مع جلب صورة المنتج
     if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-        $cart_items = $_SESSION['cart'];
-        $cart_empty = false;
+        foreach ($_SESSION['cart'] as $pid => $item) {
+            // جلب صورة المنتج للزائر
+            $img_stmt = $conn->prepare("SELECT image_path FROM product_images WHERE product_id = ? AND is_main = 1 LIMIT 1");
+            $img_stmt->bind_param("i", $pid);
+            $img_stmt->execute();
+            $img_row = $img_stmt->get_result()->fetch_assoc();
+            $item['image'] = $img_row['image_path'] ?? 'img/default.jpg';
+            $item['id']    = $pid;
+            $cart_items[]  = $item;
+        }
+        $cart_empty = empty($cart_items);
     }
 }
 
@@ -49,24 +62,29 @@ if ($cart_empty) {
 }
 
 // جلب بيانات العميل والعنوان الافتراضي
-$user_sql = "SELECT u.*, da.* 
-             FROM users u 
-             LEFT JOIN delivery_addresses da ON u.id = da.user_id AND da.is_default = 1
-             WHERE u.id = ?";
-$stmt = $conn->prepare($user_sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user_data = $stmt->get_result()->fetch_assoc();
+if ($is_logged_in) {
+    $user_sql = "SELECT u.*, da.* 
+                 FROM users u 
+                 LEFT JOIN delivery_addresses da ON u.id = da.user_id AND da.is_default = 1
+                 WHERE u.id = ?";
+    $stmt = $conn->prepare($user_sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $user_data = $stmt->get_result()->fetch_assoc();
+} else {
+    $user_data = [];
+}
 
 // حساب المجاميع
-$cart_items = $_SESSION['cart'];
 $subtotal = 0;
 foreach ($cart_items as $item) {
     if (isset($item['selling_price']) && isset($item['quantity'])) {
         $subtotal += $item['selling_price'] * $item['quantity'];
     }
 }
-$shipping_cost = 15; // قيمة ثابتة مؤقتاً
+// جلب تكلفة الشحن من الإعدادات
+$free_min = floatval($site_settings['free_shipping_min'] ?? 200);
+$shipping_cost = ($free_min > 0 && $subtotal >= $free_min) ? 0 : floatval($site_settings['shipping_cost'] ?? 15);
 $total = $subtotal + $shipping_cost;
 
 ?>
