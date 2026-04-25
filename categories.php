@@ -71,10 +71,28 @@ foreach ($categories as &$category) {
     }
 }
 
-// تضمين functions.php لاستخدام generateProductCard
+// جلب شعار الموقع للصور الافتراضية
 require_once 'functions.php';
+$_cat_settings = function_exists('getSettings') ? getSettings() : [];
+$_cat_site_logo = $_cat_settings['site_logo'] ?? 'img/1.jpg';
+if (strpos($_cat_site_logo, '../') === 0) $_cat_site_logo = substr($_cat_site_logo, 3);
+if (!file_exists($_cat_site_logo) && strpos($_cat_site_logo, 'http') !== 0) $_cat_site_logo = 'img/1.jpg';
 
-// أيقونات الفئات - يمكن تخصيصها حسب الحاجة
+// دالة مساعدة لحل مسار صورة الفئة
+function resolveCategoryImage($raw_path, $fallback) {
+    if (empty($raw_path)) return $fallback;
+    // إزالة ../ من البداية
+    $path = ltrim($raw_path, '/');
+    if (strpos($path, '../') === 0) $path = substr($path, 3);
+    // تجربة المسار كما هو
+    if (file_exists($path)) return $path;
+    // تجربة بإضافة uploads/settings/ إن كان اسم ملف فقط
+    if (strpos($path, '/') === false && file_exists('uploads/settings/' . $path)) {
+        return 'uploads/settings/' . $path;
+    }
+    return $fallback;
+}
+?>
 $category_icons = [
     'default' => 'fa-box',
     'makeup' => 'fa-palette',
@@ -467,17 +485,12 @@ $category_icons = [
                 <div class="category-circle" data-category-id="<?php echo $cat['id']; ?>" onclick="filterCategory(<?php echo $cat['id']; ?>)">
                     <div class="circle-icon">
                         <?php 
-                        // إصلاح مسار الصورة - إزالة ../ إذا كانت موجودة
-                        $image_path = !empty($cat['image']) ? $cat['image'] : '';
-                        if ($image_path && strpos($image_path, '../') === 0) {
-                            $image_path = substr($image_path, 3); // إزالة ../
-                        }
-                        $category_image = !empty($image_path) && file_exists($image_path) ? $image_path : 'img/1.jpg';
+                        $category_image = resolveCategoryImage($cat['image'] ?? '', $_cat_site_logo);
                         ?>
-                        <img src="<?php echo $category_image; ?>" 
+                        <img src="<?php echo htmlspecialchars($category_image); ?>" 
                              alt="<?php echo htmlspecialchars($cat['name']); ?>" 
                              class="category-circle-img"
-                             onerror="this.onerror=null; this.src='img/1.jpg';">
+                             onerror="this.onerror=null; this.src='<?php echo $_cat_site_logo; ?>';">
                     </div>
                     <div class="circle-name"><?php echo htmlspecialchars($cat['name']); ?></div>
                     <div class="circle-count"><?php echo $cat['product_count']; ?></div>

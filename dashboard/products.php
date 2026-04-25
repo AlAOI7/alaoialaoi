@@ -1143,35 +1143,33 @@ $currencies_result->data_seek(0);
         function initEventListeners() {
             console.log('تهيئة مستمعي الأحداث...');
             
+            const addListener = (id, event, handler) => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener(event, handler);
+            };
+
             // زر إضافة منتج
-            document.getElementById('addProductBtn').addEventListener('click', openAddProductModal);
-            
-            const addFirstBtn = document.getElementById('addFirstProductBtn');
-            if (addFirstBtn) {
-                addFirstBtn.addEventListener('click', openAddProductModal);
-            }
+            addListener('addProductBtn', 'click', openAddProductModal);
+            addListener('addFirstProductBtn', 'click', openAddProductModal);
             
             // أزرار الإغلاق
-            document.getElementById('closeProductModal').addEventListener('click', closeProductModal);
-            document.getElementById('cancelProduct').addEventListener('click', closeProductModal);
-            document.getElementById('closeImportModal').addEventListener('click', closeImportModal);
-            document.getElementById('cancelImport').addEventListener('click', closeImportModal);
-            document.getElementById('closeViewProductModal').addEventListener('click', closeViewProductModal);
-            document.getElementById('closeViewProduct').addEventListener('click', closeViewProductModal);
+            addListener('closeProductModal', 'click', closeProductModal);
+            addListener('cancelProduct', 'click', closeProductModal);
+            addListener('closeImportModal', 'click', closeImportModal);
+            addListener('cancelImport', 'click', closeImportModal);
+            addListener('closeViewProductModal', 'click', closeViewProductModal);
+            addListener('closeViewProduct', 'click', closeViewProductModal);
             
             // حفظ المنتج
-            document.getElementById('saveProduct').addEventListener('click', saveProduct);
+            addListener('saveProduct', 'click', saveProduct);
             
             // استيراد
-            document.getElementById('importProductsBtn').addEventListener('click', openImportModal);
-            document.getElementById('importFileUpload').addEventListener('click', () => document.getElementById('importFile').click());
-            document.getElementById('submitImport').addEventListener('click', submitImport);
+            addListener('importProductsBtn', 'click', openImportModal);
+            addListener('importFileUpload', 'click', () => document.getElementById('importFile')?.click());
+            addListener('submitImport', 'click', submitImport);
             
             // رفع الصور
-            const imagesUpload = document.getElementById('productImagesUpload');
-            if (imagesUpload) {
-                imagesUpload.addEventListener('click', () => document.getElementById('productImages').click());
-            }
+            addListener('productImagesUpload', 'click', () => document.getElementById('productImages')?.click());
             
             const productImages = document.getElementById('productImages');
             if (productImages) {
@@ -1581,94 +1579,107 @@ $currencies_result->data_seek(0);
             console.log('عرض المنتج:', productId);
             currentProductId = productId;
             
-            // إظهار مؤشر التحميل
             const loading = document.getElementById('productDetailLoading');
             const content = document.getElementById('productDetailContent');
-            
             if (loading) loading.style.display = 'block';
             if (content) content.style.display = 'none';
             
-            // فتح النافذة
             const modal = document.getElementById('viewProductModal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+            if (modal) modal.style.display = 'flex';
             
-            // جلب بيانات المنتج (محاكاة)
-            setTimeout(() => {
-                const viewBtn = document.querySelector(`.action-btn.view[data-id="${productId}"]`);
-                if (viewBtn) {
-                    // تحديث البيانات في النافذة
-                    const productName = document.getElementById('viewProductName');
-                    const productCategory = document.getElementById('viewProductCategory');
-                    const productPrice = document.getElementById('viewProductPrice');
-                    const oldPrice = document.getElementById('viewOldPrice');
-                    const productDescription = document.getElementById('viewProductDescription');
-                    const productQuantity = document.getElementById('viewProductQuantity');
-                    const productBarcode = document.getElementById('viewProductBarcode');
-                    const productStatus = document.getElementById('viewProductStatus');
-                    
-                    if (productName) productName.textContent = viewBtn.getAttribute('data-name') || '-';
-                    if (productCategory) productCategory.textContent = viewBtn.getAttribute('data-category') || '-';
-                    
-                    const price = viewBtn.getAttribute('data-price') || '0';
-                    const currency = viewBtn.getAttribute('data-currency') || '';
-                    if (productPrice) productPrice.textContent = price + ' ' + currency;
-                    
-                    const oldPriceValue = viewBtn.getAttribute('data-old-price');
-                    if (oldPrice && oldPriceValue && oldPriceValue !== '0') {
-                        oldPrice.textContent = oldPriceValue + ' ' + currency;
-                        oldPrice.style.display = 'inline';
-                    } else if (oldPrice) {
-                        oldPrice.style.display = 'none';
+            fetch('ajax_functions.php?action=get_product&id=' + productId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const p = data.product;
+                        const el = id => document.getElementById(id);
+                        
+                        if (el('viewProductName'))     el('viewProductName').textContent = p.name || '-';
+                        if (el('viewProductCategory')) el('viewProductCategory').textContent = p.category_name || '-';
+                        if (el('viewProductDescription')) el('viewProductDescription').textContent = p.description || 'لا يوجد وصف';
+                        if (el('viewProductQuantity')) el('viewProductQuantity').textContent = p.quantity || '0';
+                        if (el('viewProductBarcode'))  el('viewProductBarcode').textContent = p.barcode || 'غير متوفر';
+                        
+                        const currency = p.currency_symbol || '';
+                        if (el('viewProductPrice')) el('viewProductPrice').textContent = (p.selling_price || '0') + ' ' + currency;
+                        
+                        if (el('viewOldPrice')) {
+                            if (p.old_price && p.old_price > 0) {
+                                el('viewOldPrice').textContent = p.old_price + ' ' + currency;
+                                el('viewOldPrice').style.display = 'inline';
+                            } else {
+                                el('viewOldPrice').style.display = 'none';
+                            }
+                        }
+                        
+                        const statusMap = {active:'نشط', inactive:'غير نشط', low_stock:'منخفض المخزون'};
+                        if (el('viewProductStatus')) el('viewProductStatus').textContent = statusMap[p.status] || p.status;
+                        
+                        if (loading) loading.style.display = 'none';
+                        if (content) content.style.display = 'grid';
+                    } else {
+                        console.error(data.message);
+                        if (loading) loading.style.display = 'none';
                     }
-                    
-                    if (productDescription) {
-                        const description = viewBtn.getAttribute('data-description');
-                        productDescription.textContent = description || 'لا يوجد وصف للمنتج';
-                    }
-                    
-                    if (productQuantity) productQuantity.textContent = viewBtn.getAttribute('data-quantity') || '0';
-                    if (productBarcode) productBarcode.textContent = viewBtn.getAttribute('data-barcode') || 'غير متوفر';
-                    
-                    const status = viewBtn.getAttribute('data-status');
-                    let statusText = 'غير معروف';
-                    if (status === 'active') statusText = 'نشط';
-                    else if (status === 'inactive') statusText = 'غير نشط';
-                    else if (status === 'low_stock') statusText = 'منخفض المخزون';
-                    
-                    if (productStatus) productStatus.textContent = statusText;
-                }
-                
-                // إخفاء مؤشر التحميل وإظهار المحتوى
-                if (loading) loading.style.display = 'none';
-                if (content) content.style.display = 'grid';
-            }, 500);
+                })
+                .catch(err => {
+                    console.error('خطأ AJAX:', err);
+                    if (loading) loading.style.display = 'none';
+                });
         }
 
         // تحرير المنتج
         function editProduct(productId) {
             console.log('تحرير المنتج:', productId);
             
-            // في التطبيق الحقيقي، ستكون هذه بيانات حقيقية من الخادم
-            const viewBtn = document.querySelector(`.action-btn.view[data-id="${productId}"]`);
-            
-            if (viewBtn) {
-                document.getElementById('productModalTitle').textContent = 'تعديل المنتج';
-                document.getElementById('productId').value = productId;
-                document.getElementById('productName').value = viewBtn.getAttribute('data-name') || '';
-                document.getElementById('productDescription').value = viewBtn.getAttribute('data-description') || '';
-                
-                // هنا يمكنك إضافة المزيد من الحقول لتعبئتها
-                
-                document.getElementById('saveProduct').textContent = 'تحديث المنتج';
-                
-                // فتح النافذة
-                const modal = document.getElementById('productModal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                }
-            }
+            fetch('ajax_functions.php?action=get_product&id=' + productId)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('تعذر تحميل بيانات المنتج');
+                        return;
+                    }
+                    const p = data.product;
+                    const val = (id, v) => { const el = document.getElementById(id); if(el) el.value = v ?? ''; };
+                    
+                    document.getElementById('productModalTitle').textContent = 'تعديل المنتج';
+                    val('productId',       p.id);
+                    val('productName',     p.name);
+                    val('productDescription', p.description);
+                    val('productCategory', p.category_id);
+                    val('productBrand',    p.brand_id);
+                    val('basePrice',       p.base_price);
+                    val('oldPrice',        p.old_price);
+                    val('taxRate',         p.tax_rate);
+                    val('discount',        p.discount);
+                    val('productQuantity', p.quantity);
+                    val('productBarcode',  p.barcode);
+                    val('expiryDate',      p.expiry_date);
+                    val('productStatus',   p.status);
+                    val('priceSar',        p.price_sar);
+                    val('priceUsd',        p.price_usd);
+                    val('priceYerNew',     p.price_yer_new);
+                    val('priceYerOld',     p.price_yer_old);
+                    
+                    const featuredEl = document.getElementById('featuredProduct');
+                    if (featuredEl) featuredEl.checked = p.featured == 1;
+                    const popularEl = document.getElementById('popularProduct');
+                    if (popularEl) popularEl.checked = p.popular == 1;
+                    const newEl = document.getElementById('newProduct');
+                    if (newEl) newEl.checked = p.new_product == 1;
+                    
+                    if (document.getElementById('saveProduct'))
+                        document.getElementById('saveProduct').textContent = 'تحديث المنتج';
+                    
+                    calculatePrices();
+                    
+                    const modal = document.getElementById('productModal');
+                    if (modal) modal.style.display = 'flex';
+                })
+                .catch(err => {
+                    console.error('خطأ:', err);
+                    alert('تعذر تحميل بيانات المنتج');
+                });
         }
 
         // تحرير المنتج من نافذة العرض

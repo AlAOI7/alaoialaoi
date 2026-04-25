@@ -652,7 +652,7 @@ if (isset($_GET['customer_id']) && is_numeric($_GET['customer_id'])) {
                                         <tr>
                                             <td><?= htmlspecialchars($return['return_number']) ?></td>
                                             <td><?= htmlspecialchars($return['customer_name']) ?></td>
-                                            <td><?= htmlspecialchars($return['product_name']) ?></td>
+                                            <td><?= htmlspecialchars($return['product_name'] ?? '-') ?></td>
                                             <td><?= date('d/m/Y', strtotime($return['created_at'])) ?></td>
                                             <td>
                                                 <span class="status <?= $return['return_status'] ?>">

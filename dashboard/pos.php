@@ -144,26 +144,32 @@ $orders = []; // أو استدعاء الدالة من config.php إذا كان�
 function getFilteredOrders($filters = []) {
     global $conn;
     
-    $sql = "SELECT * FROM orders WHERE 1=1";
+    $sql = "SELECT o.*, 
+                   COALESCE(o.invoice_number, o.order_number, CONCAT('#ORD-', o.id)) as order_number,
+                   u.name as customer_name
+            FROM orders o
+            LEFT JOIN users u ON o.customer_id = u.id
+            WHERE 1=1";
     
     if (!empty($filters['date_range'])) {
         switch($filters['date_range']) {
             case '7days':
-                $sql .= " AND order_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+                $sql .= " AND o.order_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
                 break;
             case '30days':
-                $sql .= " AND order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
+                $sql .= " AND o.order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)";
                 break;
             case '3months':
-                $sql .= " AND order_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)";
+                $sql .= " AND o.order_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)";
                 break;
             case 'this_year':
-                $sql .= " AND YEAR(order_date) = YEAR(CURDATE())";
+                $sql .= " AND YEAR(o.order_date) = YEAR(CURDATE())";
                 break;
         }
     }
     
     $result = $conn->query($sql);
+    if (!$result) return [];
     return $result->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -185,21 +191,10 @@ $category_sales = [];
 ?>
 
 <?php
-// معالجة الفلاتر
-$filters = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $filters = [
-        'date_range' => $_POST['date_range'] ?? '',
-        'category' => $_POST['category'] ?? '',
-        'customer_type' => $_POST['customer_type'] ?? ''
-    ];
-}
-
-// جلب البيانات
-$orders = getOrders($filters);
+// جلب البيانات باستخدام الدوال الموجودة
+$orders = getFilteredOrders($filters);
 $stats = getSalesStats($filters);
 $monthly_revenue = getMonthlyRevenue(date('Y'));
-// $sales_by_category = getSalesByCategory($filters);
 $categories = getCategories();
 
 // إعداد بيانات الرسوم البيانية
@@ -208,14 +203,9 @@ $revenue_data = array_fill(0, 12, 0);
 foreach ($monthly_revenue as $data) {
     $revenue_data[$data['month'] - 1] = $data['revenue'];
 }
-
 $category_names = [];
 $category_sales = [];
-// foreach ($sales_by_category as $category) {
-//     $category_names[] = $category['category_name'];
-//     $category_sales[] = $category['total_sales'];
-// }
-?> 
+?>
   <?php include 'header.php'; ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">

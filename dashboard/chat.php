@@ -324,74 +324,11 @@ $stats = getSupportStats();
 </head>
 <body>
     <div class="dashboard">
-        <!-- الشريط الجانبي -->
-        <div class="sidebar">
-            <div class="logo">
-                <h1>متجرنا الإلكتروني</h1>
-                <p>لوحة التحكم الإدارية</p>
-            </div>
-            <div class="sidebar-menu">
-                <div class="menu-item">
-                    <i class="fas fa-home"></i>
-                    <span>الرئيسية</span>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>الطلبات</span>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-box"></i>
-                    <span>المنتجات</span>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-university"></i>
-                    <span>البنوك والحسابات</span>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-users"></i>
-                    <span>العملاء</span>
-                </div>
-                <div class="menu-item active">
-                    <i class="fas fa-headset"></i>
-                    <span>الدعم الفني</span>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>التقارير</span>
-                </div>
-                <div class="menu-item">
-                    <i class="fas fa-cog"></i>
-                    <span>الإعدادات</span>
-                </div>
-            </div>
-        </div>
+        <?php include 'sidebar.php'; ?>
 
         <!-- المحتوى الرئيسي -->
         <div class="main-content">
-            <!-- الهيدر -->
-            <div class="header">
-                <div class="header-left">
-                    <button class="toggle-sidebar">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="page-info">
-                        <h2>الدعم الفني والتواصل مع العملاء</h2>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="header-icon">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge" id="notificationCount"><?php echo $stats['unread_messages']; ?></span>
-                    </div>
-                    <div class="user-profile">
-                        <div class="user-avatar"><?php echo mb_substr($user['name'], 0, 1); ?></div>
-                        <div class="user-info">
-                            <div class="user-name"><?php echo $user['name']; ?></div>
-                            <div class="user-role"><?php echo $user['user_type'] == 'admin' ? 'مدير النظام' : 'دعم فني'; ?></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php include 'header.php'; ?>
 
             <!-- محتوى الصفحة -->
             <div class="page-content">
